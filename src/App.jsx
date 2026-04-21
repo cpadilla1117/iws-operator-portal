@@ -51,28 +51,36 @@ export default function App() {
   const [activeAnchor, setActiveAnchor] = useState('pricing');
   const [scrolled, setScrolled] = useState(false);
   const spySuppressed = React.useRef(false);
+  const observerRef = React.useRef(null);
 
   // IntersectionObserver scroll-spy + scrolled shadow + bottom-of-page edge case
+  // Re-runs when session/userRole change so sections are in the DOM
   useEffect(() => {
-    const sectionIds = ['pricing', 'terms', 'service-area', 'contact', 'disclosures'];
-    const visibleSet = new Set();
+    if (!session || !userRole) return;
 
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) visibleSet.add(entry.target.id);
-        else visibleSet.delete(entry.target.id);
-      }
-      if (spySuppressed.current) return;
-      // Pick the lowest visible section in document order
-      for (let i = sectionIds.length - 1; i >= 0; i--) {
-        if (visibleSet.has(sectionIds[i])) { setActiveAnchor(sectionIds[i]); return; }
-      }
-    }, { rootMargin: '-100px 0px -60% 0px', threshold: 0 });
+    // Small delay to ensure DOM has rendered after state update
+    const timer = setTimeout(() => {
+      const sectionIds = ['pricing', 'terms', 'service-area', 'contact', 'disclosures'];
+      const visibleSet = new Set();
 
-    sectionIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
+      const observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visibleSet.add(entry.target.id);
+          else visibleSet.delete(entry.target.id);
+        }
+        if (spySuppressed.current) return;
+        for (let i = sectionIds.length - 1; i >= 0; i--) {
+          if (visibleSet.has(sectionIds[i])) { setActiveAnchor(sectionIds[i]); return; }
+        }
+      }, { rootMargin: '-100px 0px -60% 0px', threshold: 0 });
+
+      sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+
+      observerRef.current = { observer };
+    }, 50);
 
     // Scroll listener for shadow + bottom-of-page edge case
     const scrollHandler = () => {
@@ -83,8 +91,12 @@ export default function App() {
     };
     window.addEventListener('scroll', scrollHandler, { passive: true });
 
-    return () => { observer.disconnect(); window.removeEventListener('scroll', scrollHandler); };
-  }, []);
+    return () => {
+      clearTimeout(timer);
+      observerRef.current?.observer?.disconnect();
+      window.removeEventListener('scroll', scrollHandler);
+    };
+  }, [session, userRole]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => { setSession(s); setAuthLoading(false); });
