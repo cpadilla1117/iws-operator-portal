@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase.js';
 import { loadPricing, savePricing, loadUserRole } from './lib/db.js';
 import iwsLogo from './assets/IWS-Symbol-color.png';
@@ -50,24 +50,40 @@ export default function App() {
   const [editingPricing, setEditingPricing] = useState(false);
   const [activeAnchor, setActiveAnchor] = useState('pricing');
   const [scrolled, setScrolled] = useState(false);
+  const spySuppressed = React.useRef(false);
 
+  // IntersectionObserver scroll-spy + scrolled shadow + bottom-of-page edge case
   useEffect(() => {
-    const sections = ['pricing', 'terms', 'service-area', 'contact', 'disclosures'];
-    const handler = () => {
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = document.getElementById(sections[i]);
-        if (el && el.getBoundingClientRect().top <= 160) { setActiveAnchor(sections[i]); return; }
+    const sectionIds = ['pricing', 'terms', 'service-area', 'contact', 'disclosures'];
+    const visibleSet = new Set();
+
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) visibleSet.add(entry.target.id);
+        else visibleSet.delete(entry.target.id);
       }
-      setActiveAnchor('pricing');
-    };
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
+      if (spySuppressed.current) return;
+      // Pick the lowest visible section in document order
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        if (visibleSet.has(sectionIds[i])) { setActiveAnchor(sectionIds[i]); return; }
+      }
+    }, { rootMargin: '-100px 0px -60% 0px', threshold: 0 });
 
-  useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
+    sectionIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    // Scroll listener for shadow + bottom-of-page edge case
+    const scrollHandler = () => {
+      setScrolled(window.scrollY > 60);
+      if (spySuppressed.current) return;
+      const atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 4);
+      if (atBottom) setActiveAnchor('disclosures');
+    };
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+
+    return () => { observer.disconnect(); window.removeEventListener('scroll', scrollHandler); };
   }, []);
 
   useEffect(() => {
@@ -219,7 +235,13 @@ export default function App() {
                 {i > 0 && <span style={{ color: '#CBD5E1', margin: '0 10px', fontSize: 13 }}>&middot;</span>}
                 <a
                   href={`#${item.id}`}
-                  onClick={e => { e.preventDefault(); document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                  onClick={e => {
+                    e.preventDefault();
+                    setActiveAnchor(item.id);
+                    spySuppressed.current = true;
+                    document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    setTimeout(() => { spySuppressed.current = false; }, 600);
+                  }}
                   style={{
                     fontSize: 13, fontWeight: 500, letterSpacing: '0.05em', textDecoration: 'none', cursor: 'pointer',
                     color: isActive ? BRAND.teal : '#475569',
