@@ -140,8 +140,8 @@ export default function App() {
         <div style={{ background: '#fff', borderRadius: 20, padding: isMobile ? 32 : 48, width: isMobile ? '90%' : 400, border: '0.5px solid #E2E8F0' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <img src={iwsLogo} alt="IWS" style={{ height: 48, width: 'auto', marginBottom: 20 }} />
-            <div style={{ fontSize: 20, fontWeight: 600, color: '#0F172A' }}>Operator Portal</div>
-            <div style={{ fontSize: 13, color: '#94A3B8', marginTop: 6 }}>Infinity Water Solutions</div>
+            <div style={{ fontSize: 24, fontWeight: 600, color: '#0F172A', letterSpacing: '-0.01em' }}>Infinity Water Solutions</div>
+            <div style={{ fontSize: 14, fontWeight: 500, color: '#64748B', marginTop: 6, letterSpacing: '0.04em' }}>Operator Portal</div>
           </div>
           <form onSubmit={signIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <input type="email" placeholder="Email" required value={loginForm.email}
