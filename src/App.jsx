@@ -257,6 +257,17 @@ export default function App() {
 
       <main style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '24px 20px 48px' : '48px 24px 80px', scrollMarginTop: 100 }}>
 
+        {/* ── ORIENTATION BLOCK ── */}
+        <section aria-labelledby="portal-title" style={{ marginBottom: 48 }}>
+          <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 8 }} />
+          <h1 id="portal-title" style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 10px' }}>
+            Operator Portal
+          </h1>
+          <p style={{ fontSize: 16, lineHeight: 1.6, color: '#334155', fontWeight: 400, margin: 0, maxWidth: 640 }}>
+            Live spot pricing and availability for treated produced water from Infinity Water Solutions&apos; facilities. Rates refresh every two weeks. Contact us directly to confirm volumes and execute purchases.
+          </p>
+        </section>
+
         {/* ── DARK HERO ── */}
         <div id="pricing" style={{
           background: '#0B1220', borderRadius: 20,
@@ -269,9 +280,9 @@ export default function App() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 2, height: 24, background: BRAND.teal, borderRadius: 1 }} />
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                <h2 style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
                   SPOT PRICING · TREATED PRODUCED WATER
-                </div>
+                </h2>
               </div>
               <div style={{ fontSize: 15, color: '#E2E8F0', fontWeight: 400, marginBottom: 14 }}>Mills Ranch · Eddy County, NM</div>
               <div style={{ display: 'flex', gap: 8 }}>
