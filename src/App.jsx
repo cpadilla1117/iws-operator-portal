@@ -168,11 +168,6 @@ export default function App() {
   const canEdit = userRole === 'owner';
   const bestPrice = pricing.tier3Price || pricing.tier2Price || pricing.tier1Price;
 
-  const TIERS = [
-    { label: '> 1,000,000 barrels', key: 'tier3Price', dot: BRAND.teal, best: true },
-    { label: '500,000 – 1,000,000 barrels', key: 'tier2Price', dot: BRAND.blue },
-    { label: '< 500,000 barrels', key: 'tier1Price', dot: '#94A3B8' },
-  ];
 
   const sp = isMobile ? 24 : 32;
 
@@ -292,7 +287,7 @@ export default function App() {
         <div id="pricing" style={{
           background: '#0B1220', borderRadius: 20,
           padding: isMobile ? '28px 24px' : '36px 40px',
-          marginBottom: isMobile ? 24 : 32, color: '#fff',
+          color: '#fff',
           scrollMarginTop: 100,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', flexWrap: 'wrap', gap: isMobile ? 28 : 40 }}>
@@ -334,90 +329,57 @@ export default function App() {
                 </div>
               )}
             </div>
-            {/* Right — best price */}
+            {/* Right — spot rate */}
             <div style={{ textAlign: isMobile ? 'left' : 'right' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Best available rate</div>
-              <div style={{ ...TABNUM }}>
-                <span style={{ fontSize: isMobile ? 56 : 72, fontWeight: 600, color: '#fff', lineHeight: 1 }}>
-                  ${bestPrice > 0 ? bestPrice.toFixed(2) : '—'}
-                </span>
-                {bestPrice > 0 && <span style={{ fontSize: isMobile ? 22 : 28, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>}
-              </div>
-              <div style={{ fontSize: 13, color: '#64748B', marginTop: 6, ...TABNUM }}>≥ 1,000,000 barrels tier</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Spot rate</div>
+              {editingPricing ? (
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: isMobile ? 'flex-start' : 'flex-end', ...TABNUM }}>
+                  <span style={{ fontSize: isMobile ? 56 : 72, fontWeight: 600, color: '#fff', lineHeight: 1 }}>$</span>
+                  <input
+                    type="number" step="0.01" min="0"
+                    value={pricing.tier3Price || ''}
+                    onChange={e => setPricing(p => ({ ...p, tier3Price: parseFloat(e.target.value) || 0 }))}
+                    style={{
+                      width: isMobile ? 120 : 160,
+                      padding: '0 6px',
+                      fontSize: isMobile ? 56 : 72, fontWeight: 600, color: '#fff',
+                      background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: 8, outline: 'none', lineHeight: 1,
+                      textAlign: isMobile ? 'left' : 'right', fontFamily: FONT, ...TABNUM,
+                    }}
+                  />
+                  <span style={{ fontSize: isMobile ? 22 : 28, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>
+                </div>
+              ) : (
+                <div style={{ ...TABNUM }}>
+                  <span style={{ fontSize: isMobile ? 56 : 72, fontWeight: 600, color: '#fff', lineHeight: 1 }}>
+                    ${bestPrice > 0 ? bestPrice.toFixed(2) : '—'}
+                  </span>
+                  {bestPrice > 0 && <span style={{ fontSize: isMobile ? 22 : 28, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* ── PRICING TABLE ── */}
-        <div style={{ marginBottom: sp }}>
-          {/* Column headers */}
-          <div style={{
-            display: 'flex', justifyContent: 'space-between', padding: '0 0 10px', marginBottom: 4,
-            fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase',
-          }}>
-            <span>Volume</span>
-            <span>Rate</span>
-          </div>
-
-          {TIERS.map((tier) => {
-            const price = pricing[tier.key];
-            return (
-              <div key={tier.key} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: isMobile ? '18px 0' : '22px 0',
-              }}>
-                {/* Volume */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: tier.dot, flexShrink: 0 }} />
-                  <span style={{ fontSize: 15, fontWeight: 400, color: '#0F172A', ...TABNUM }}>{tier.label}</span>
-                </div>
-
-                {/* Price + best tag */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {editingPricing ? (
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                      <span style={{ fontSize: 20, fontWeight: 500, color: '#0F172A' }}>$</span>
-                      <input type="number" step="0.01" min="0" value={price || ''}
-                        onChange={e => setPricing(p => ({ ...p, [tier.key]: parseFloat(e.target.value) || 0 }))}
-                        style={{ width: 70, padding: '4px 6px', border: '1px solid #E2E8F0', borderRadius: 6, fontSize: 20, fontWeight: 600, color: '#0F172A', background: '#F8FAFC', textAlign: 'right', outline: 'none', fontFamily: FONT, ...TABNUM }}
-                      />
-                    </div>
-                  ) : (
-                    <span style={{ fontSize: 22, fontWeight: 600, color: '#0F172A', ...TABNUM }}>
-                      {price > 0 ? (
-                        <>${price.toFixed(2)}<span style={{ fontSize: 13, fontWeight: 400, color: '#0F172A', opacity: 0.4, marginLeft: 2 }}>/bbl</span></>
-                      ) : (
-                        <span style={{ color: '#CBD5E1' }}>—</span>
-                      )}
-                    </span>
-                  )}
-                  {tier.best && price > 0 && !editingPricing && (
-                    <span style={{ fontSize: 10, fontWeight: 600, color: BRAND.teal, textTransform: 'uppercase', letterSpacing: '0.06em' }}>BEST</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Italic footnote below tier table */}
-          <div style={{
-            fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: '#475569',
-            fontWeight: 400, marginTop: 24,
-          }}>
-            Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
-            <a
-              href="#contact"
-              onClick={e => {
-                e.preventDefault();
-                setActiveAnchor('contact');
-                spySuppressed.current = true;
-                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                setTimeout(() => { spySuppressed.current = false; }, 600);
-              }}
-              className="contact-link"
-              style={{ color: BRAND.teal, textDecoration: 'none', fontStyle: 'italic' }}
-            >contact us</a> directly.
-          </div>
+        {/* ── FOOTNOTE BELOW HERO ── */}
+        <div style={{
+          fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: '#475569',
+          fontWeight: 400, marginTop: 24, marginBottom: 32,
+        }}>
+          Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
+          <a
+            href="#contact"
+            onClick={e => {
+              e.preventDefault();
+              setActiveAnchor('contact');
+              spySuppressed.current = true;
+              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              setTimeout(() => { spySuppressed.current = false; }, 600);
+            }}
+            className="contact-link"
+            style={{ color: BRAND.teal, textDecoration: 'none', fontStyle: 'italic' }}
+          >contact us</a> directly.
         </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
