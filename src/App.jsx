@@ -290,8 +290,8 @@ export default function App() {
             gap: isMobile ? 16 : 24,
           }}>
             {[
-              { name: 'Mills Ranch', priceKey: 'tier3Price' },
-              { name: 'Fed128',      priceKey: 'tier2Price' },
+              { name: 'Mills Ranch 1 Facility', priceKey: 'tier3Price' },
+              { name: 'Fed128 Facility',        priceKey: 'tier2Price' },
             ].map((facility, idx) => {
               const facilityPrice = pricing[facility.priceKey];
               return (
@@ -310,8 +310,19 @@ export default function App() {
                         SPOT PRICING · TREATED PRODUCED WATER
                       </h2>
                     </div>
-                    <div style={{ fontSize: 15, color: '#E2E8F0', fontWeight: 400, marginBottom: 14 }}>
-                      {facility.name} · Eddy County, NM
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{
+                        fontSize: isMobile ? 16 : 18, fontWeight: 600, color: '#FFFFFF',
+                        letterSpacing: '-0.01em', lineHeight: 1.3,
+                      }}>
+                        {facility.name}
+                      </div>
+                      <div style={{
+                        fontSize: isMobile ? 13 : 14, fontWeight: 400, color: '#94A3B8',
+                        lineHeight: 1.4, marginTop: 2,
+                      }}>
+                        Eddy County, NM
+                      </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Pickup at pond</span>
