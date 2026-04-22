@@ -60,7 +60,7 @@ export default function App() {
 
     // Small delay to ensure DOM has rendered after state update
     const timer = setTimeout(() => {
-      const sectionIds = ['pricing', 'terms', 'service-area', 'contact', 'disclosures'];
+      const sectionIds = ['pricing', 'service-area', 'quality', 'terms', 'contact', 'disclosures'];
       const visibleSet = new Set();
 
       const observer = new IntersectionObserver((entries) => {
@@ -236,8 +236,9 @@ export default function App() {
         }}>
           {[
             { id: 'pricing', label: 'Pricing' },
-            { id: 'terms', label: 'Terms' },
             { id: 'service-area', label: 'Service Area' },
+            { id: 'quality', label: 'Water Quality' },
+            { id: 'terms', label: 'Terms' },
             { id: 'contact', label: 'Contact' },
             { id: 'disclosures', label: 'Disclosures' },
           ].map((item, i) => {
@@ -272,8 +273,11 @@ export default function App() {
         {/* ── ORIENTATION BLOCK ── */}
         <section aria-labelledby="portal-title" style={{ marginBottom: 48 }}>
           <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 8 }} />
-          <h1 id="portal-title" style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 10px' }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
             Operator Portal
+          </div>
+          <h1 id="portal-title" style={{ fontSize: isMobile ? 26 : 32, fontWeight: 600, color: '#0F172A', letterSpacing: '-0.01em', lineHeight: 1.15, margin: '0 0 12px', maxWidth: 640 }}>
+            IWS Water Availability &amp; Pricing Dashboard
           </h1>
           <p style={{ fontSize: 16, lineHeight: 1.6, color: '#334155', fontWeight: 400, margin: 0, maxWidth: 640 }}>
             Live spot pricing and availability for treated produced water from Infinity Water Solutions&apos; facilities. Rates refresh every two weeks. Contact us directly to confirm volumes and execute purchases.
@@ -398,6 +402,59 @@ export default function App() {
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
+        {/* ── SERVICE AREA ── */}
+        <div id="service-area" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
+          <SectionLabel>Service Area</SectionLabel>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 24px', maxWidth: 640 }}>
+            Current supply is sourced from Infinity Water Solutions&apos; Mills Ranch 1 and Fed 128 facilities in Eddy and Lea County, New Mexico. Rates are quoted for pickup at the facility pond. Transfer services are available upon request and quoted separately.
+          </p>
+          <img src={operatorMap} alt="Operator service area map" style={{ width: '100%', borderRadius: 20 }} />
+        </div>
+
+        <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
+
+        {/* ── WATER QUALITY SPECIFICATIONS ── */}
+        <div id="quality" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
+          <SectionLabel>Water Quality Specifications</SectionLabel>
+
+          {/* Column headers */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', padding: '0 0 10px', marginBottom: 4,
+            fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase',
+          }}>
+            <span>Parameter</span>
+            <span>Value</span>
+          </div>
+
+          {[
+            { param: 'pH', value: '6.00 – 6.50', unit: '' },
+            { param: 'Iron (Fe)', value: '< 2', unit: 'mg/L' },
+            { param: 'Turbidity', value: '< 10', unit: 'NTU' },
+            { param: 'ORP', value: '> 350', unit: 'mV' },
+            { param: 'TDS', value: '160,000 – 200,000', unit: 'ppm' },
+          ].map((row) => (
+            <div key={row.param} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: isMobile ? '18px 0' : '22px 0',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: BRAND.teal, flexShrink: 0 }} />
+                <span style={{ fontSize: 15, fontWeight: 500, color: '#0F172A' }}>{row.param}</span>
+              </div>
+              <span style={{ fontSize: 16, fontWeight: 500, color: '#0F172A', ...TABNUM }}>
+                {row.value}
+                {row.unit && <span style={{ fontSize: 13, fontWeight: 400, color: '#0F172A', opacity: 0.6, marginLeft: 4 }}>{row.unit}</span>}
+              </span>
+            </div>
+          ))}
+
+          <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6, marginTop: 16 }}>
+            Values are representative and may vary by source and over time. Full analytical reports available upon request.
+          </div>
+        </div>
+
+        <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
+
         {/* ── PURCHASE & TRANSFER TERMS ── */}
         <div id="terms" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Purchase &amp; Transfer Terms</SectionLabel>
@@ -427,14 +484,6 @@ export default function App() {
             </div>
           </>
         ) : null}
-
-        <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
-
-        {/* ── SERVICE AREA ── */}
-        <div id="service-area" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
-          <SectionLabel>Service Area</SectionLabel>
-          <img src={operatorMap} alt="Operator service area map" style={{ width: '100%', borderRadius: 20 }} />
-        </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
