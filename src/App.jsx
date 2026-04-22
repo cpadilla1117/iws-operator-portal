@@ -392,25 +392,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* ── MARKET NOTES (only shown when notes exist or editing) ── */}
-        {(editingPricing || pricing.notes) ? (
-          <>
-            <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
-            <div style={{ marginBottom: sp }}>
-              <SectionLabel>Market Notes</SectionLabel>
-              {editingPricing ? (
-                <textarea value={pricing.notes}
-                  onChange={e => setPricing(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Current supply levels, expected changes, seasonal notes..."
-                  style={{ width: '100%', minHeight: 100, padding: '14px 16px', fontSize: 15, color: '#0F172A', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, outline: 'none', resize: 'vertical', lineHeight: 1.6, fontFamily: FONT }}
-                />
-              ) : (
-                <div style={{ fontSize: 15, color: '#64748B', lineHeight: 1.7 }}>{pricing.notes}</div>
-              )}
-            </div>
-          </>
-        ) : null}
-
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
         {/* ── CONTACT ── */}
