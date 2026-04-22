@@ -270,17 +270,20 @@ export default function App() {
 
       <main style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '24px 20px 48px' : '48px 24px 80px', scrollMarginTop: 100 }}>
 
-        {/* ── ORIENTATION BLOCK ── */}
-        <section aria-labelledby="portal-title" style={{ marginBottom: 48 }}>
-          <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 8 }} />
-          <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
-            Operator Portal
-          </div>
-          <h1 id="portal-title" style={{ fontSize: isMobile ? 26 : 32, fontWeight: 600, color: '#0F172A', letterSpacing: '-0.01em', lineHeight: 1.15, margin: '0 0 12px', maxWidth: 640 }}>
-            IWS Water Availability &amp; Pricing Dashboard
+        {/* ── PAGE TITLE BLOCK ── */}
+        <section aria-labelledby="portal-title" style={{ marginTop: 40, marginBottom: 48 }}>
+          <h1 id="portal-title" style={{
+            fontSize: isMobile ? 22 : 28, fontWeight: 600, color: '#0F172A',
+            letterSpacing: '0.02em', lineHeight: 1.2, margin: '0 0 16px',
+            maxWidth: 680, textTransform: 'uppercase',
+          }}>
+            Water Availability &amp; Pricing Dashboard
           </h1>
-          <p style={{ fontSize: 16, lineHeight: 1.6, color: '#334155', fontWeight: 400, margin: 0, maxWidth: 640 }}>
-            Live spot pricing and availability for treated produced water from Infinity Water Solutions&apos; facilities. Rates refresh every two weeks. Contact us directly to confirm volumes and execute purchases.
+          <p className="justify-copy" style={{
+            fontSize: 16, lineHeight: 1.6, color: '#334155', fontWeight: 400,
+            margin: 0, maxWidth: 640,
+          }}>
+            Current availability and spot pricing for treated produced water across Infinity&apos;s facilities. Updated bi-weekly. Pricing varies based on supply, water quality, and volume.
           </p>
         </section>
 
@@ -344,8 +347,28 @@ export default function App() {
           </div>
         </div>
 
-        {/* ── CHANGE 2: PRICING TABLE ── */}
+        {/* ── PRICING TABLE ── */}
         <div style={{ marginBottom: sp }}>
+          {/* Italic intro line above tier table */}
+          <div style={{
+            fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: '#475569',
+            fontWeight: 400, marginBottom: 24,
+          }}>
+            Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
+            <a
+              href="#contact"
+              onClick={e => {
+                e.preventDefault();
+                setActiveAnchor('contact');
+                spySuppressed.current = true;
+                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => { spySuppressed.current = false; }, 600);
+              }}
+              className="contact-link"
+              style={{ color: BRAND.teal, textDecoration: 'none', fontStyle: 'italic' }}
+            >contact us</a> directly.
+          </div>
+
           {/* Column headers */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', padding: '0 0 10px', marginBottom: 4,
@@ -395,21 +418,6 @@ export default function App() {
             );
           })}
 
-          <div style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, marginTop: 12 }}>
-            Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
-            <a
-              href="#contact"
-              onClick={e => {
-                e.preventDefault();
-                setActiveAnchor('contact');
-                spySuppressed.current = true;
-                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                setTimeout(() => { spySuppressed.current = false; }, 600);
-              }}
-              className="contact-link"
-              style={{ color: BRAND.teal, textDecoration: 'none' }}
-            >contact us</a> directly.
-          </div>
         </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
@@ -417,7 +425,7 @@ export default function App() {
         {/* ── SERVICE AREA ── */}
         <div id="service-area" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Service Area</SectionLabel>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 24px', maxWidth: 640 }}>
+          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 24px', maxWidth: 640 }}>
             Current supply is sourced from Infinity Water Solutions&apos; Mills Ranch 1 and Fed 128 facilities in Eddy and Lea County, New Mexico. Rates are quoted for pickup at the facility pond. Transfer services are available upon request and quoted separately.
           </p>
           <img src={operatorMap} alt="Operator service area map" style={{ width: '100%', borderRadius: 20 }} />
@@ -430,10 +438,10 @@ export default function App() {
           <SectionLabel>Water Quality Specifications</SectionLabel>
 
           {/* Page-level descriptive copy */}
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
+          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
             Water quality is representative of treated produced water across Infinity Water Solutions&apos; system and may vary by source, facility, and over time. Water is treated and managed to meet operational requirements for reuse across industrial applications.
           </p>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 32px', maxWidth: 640 }}>
+          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 32px', maxWidth: 640 }}>
             Quality may be adjusted or blended based on availability and system conditions. Full analytical reports and facility-specific specifications are available upon request. Buyer is responsible for confirming suitability for intended use.
           </p>
 
@@ -474,7 +482,7 @@ export default function App() {
               </div>
             ))}
 
-            <div style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, marginTop: 16 }}>
+            <div className="justify-copy" style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, marginTop: 16 }}>
               Values are representative and may vary by source and over time. Full analytical reports available upon request.
             </div>
           </div>
@@ -485,7 +493,7 @@ export default function App() {
         {/* ── PURCHASE & TRANSFER TERMS ── */}
         <div id="terms" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Purchase &amp; Transfer Terms</SectionLabel>
-          <div style={{ fontSize: 15, color: '#0F172A', lineHeight: 1.6, maxWidth: 720 }}>
+          <div className="justify-copy" style={{ fontSize: 15, color: '#0F172A', lineHeight: 1.6, maxWidth: 720 }}>
             <p style={{ margin: '0 0 16px', fontWeight: 400 }}>
               <span style={{ fontWeight: 500 }}>Pricing cycle.</span> Rates are fixed for a two-week period and refreshed at the start of each new cycle.
             </p>
@@ -541,7 +549,7 @@ export default function App() {
         {/* ── COMMERCIAL TERMS ── */}
         <div id="disclosures" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Commercial Terms &amp; Disclosures</SectionLabel>
-          <div style={{ fontSize: 11, color: '#64748B', lineHeight: 1.7, fontWeight: 400, maxWidth: 720 }}>
+          <div className="justify-copy" style={{ fontSize: 11, color: '#64748B', lineHeight: 1.7, fontWeight: 400, maxWidth: 720 }}>
             <p style={{ margin: '0 0 10px' }}>All pricing and volumes are indicative and subject to change based on availability, water quality, system conditions, and market dynamics. Pricing and availability are not guaranteed until confirmed in a fully executed agreement.</p>
             <p style={{ margin: '0 0 10px' }}>All pricing is quoted FOB at the facility pond.</p>
             <p style={{ margin: '0 0 10px' }}>Water quality specifications are representative and may vary by source and over time. Full specifications are available upon request.</p>
@@ -564,6 +572,7 @@ export default function App() {
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
         .pulse-dot{animation:pulse 2s ease-in-out infinite;}
         .contact-link:hover{color:${BRAND.teal}!important;text-decoration:underline;}
+        .justify-copy{text-align:justify;hyphens:auto;-webkit-hyphens:auto;word-spacing:0.02em;}
         .anchor-nav::-webkit-scrollbar{display:none;}
         @media(max-width:768px){body{font-size:14px;}}
       `}</style>
