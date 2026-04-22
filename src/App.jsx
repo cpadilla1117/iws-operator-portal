@@ -166,7 +166,6 @@ export default function App() {
 
   // ── MAIN ────────────────────────────────────────────────────────────────────
   const canEdit = userRole === 'owner';
-  const bestPrice = pricing.tier3Price || pricing.tier2Price || pricing.tier1Price;
 
 
   const sp = isMobile ? 24 : 32;
@@ -209,7 +208,7 @@ export default function App() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
-            <span>LIVE · MILLS RANCH · EDDY COUNTY, NM</span>
+            <span>LIVE · MILLS RANCH + FED128 · EDDY COUNTY, NM</span>
           </div>
           {!isMobile && pricing.periodStart && pricing.periodEnd && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -283,89 +282,110 @@ export default function App() {
           </p>
         </section>
 
-        {/* ── DARK HERO ── */}
-        <div id="pricing" style={{
-          background: '#0B1220', borderRadius: 20,
-          padding: isMobile ? '28px 24px' : '36px 40px',
-          color: '#fff',
-          scrollMarginTop: 100,
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', flexWrap: 'wrap', gap: isMobile ? 28 : 40 }}>
-            {/* Left */}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 2, height: 24, background: BRAND.teal, borderRadius: 1 }} />
-                <h2 style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
-                  SPOT PRICING · TREATED PRODUCED WATER
-                </h2>
-              </div>
-              <div style={{ fontSize: 15, color: '#E2E8F0', fontWeight: 400, marginBottom: 14 }}>Mills Ranch · Eddy County, NM</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Pickup at pond</span>
-                <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Transfer available on request</span>
-              </div>
-              {canEdit && (
-                <div style={{ marginTop: 20 }}>
-                  <button onClick={() => editingPricing ? handleSavePricing() : setEditingPricing(true)} style={{
-                    padding: '8px 18px', fontSize: 13, fontWeight: 500, borderRadius: 8, cursor: 'pointer', fontFamily: FONT,
-                    background: editingPricing ? '#fff' : 'transparent',
-                    color: editingPricing ? '#0B1220' : '#fff',
-                    border: editingPricing ? 'none' : '1px solid rgba(255,255,255,0.2)',
-                  }}>
-                    {editingPricing ? '✓ Save pricing' : '✎ Edit pricing'}
-                  </button>
-                </div>
-              )}
-              {editingPricing && (
-                <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Pricing period</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <input type="date" value={pricing.periodStart} onChange={e => setPricing(p => ({ ...p, periodStart: e.target.value }))}
-                      style={{ padding: '8px 12px', fontSize: 14, color: '#0F172A', background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: 8, fontFamily: FONT, ...TABNUM }} />
-                    <span style={{ fontSize: 13, color: '#475569' }}>to</span>
-                    <input type="date" value={pricing.periodEnd} onChange={e => setPricing(p => ({ ...p, periodEnd: e.target.value }))}
-                      style={{ padding: '8px 12px', fontSize: 14, color: '#0F172A', background: 'rgba(255,255,255,0.95)', border: 'none', borderRadius: 8, fontFamily: FONT, ...TABNUM }} />
+        {/* ── TWO FACILITY CARDS ── */}
+        <div id="pricing" style={{ scrollMarginTop: 100 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: isMobile ? 16 : 24,
+          }}>
+            {[
+              { name: 'Mills Ranch', priceKey: 'tier3Price' },
+              { name: 'Fed128',      priceKey: 'tier2Price' },
+            ].map((facility, idx) => {
+              const facilityPrice = pricing[facility.priceKey];
+              return (
+                <div key={facility.name} style={{
+                  background: '#0B1220', borderRadius: 20,
+                  padding: isMobile ? '28px 24px' : '32px 28px',
+                  color: '#fff',
+                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                  gap: 24,
+                }}>
+                  {/* Top — meta */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                      <div style={{ width: 2, height: 24, background: BRAND.teal, borderRadius: 1 }} />
+                      <h2 style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
+                        SPOT PRICING · TREATED PRODUCED WATER
+                      </h2>
+                    </div>
+                    <div style={{ fontSize: 15, color: '#E2E8F0', fontWeight: 400, marginBottom: 14 }}>
+                      {facility.name} · Eddy County, NM
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Pickup at pond</span>
+                      <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Transfer available on request</span>
+                    </div>
+                    {canEdit && (
+                      <div style={{ marginTop: 20 }}>
+                        <button onClick={() => editingPricing ? handleSavePricing() : setEditingPricing(true)} style={{
+                          padding: '8px 18px', fontSize: 13, fontWeight: 500, borderRadius: 8, cursor: 'pointer', fontFamily: FONT,
+                          background: editingPricing ? '#fff' : 'transparent',
+                          color: editingPricing ? '#0B1220' : '#fff',
+                          border: editingPricing ? 'none' : '1px solid rgba(255,255,255,0.2)',
+                        }}>
+                          {editingPricing ? '✓ Save pricing' : '✎ Edit pricing'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {/* Bottom — spot rate */}
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Spot rate</div>
+                    {editingPricing ? (
+                      <div style={{ display: 'flex', alignItems: 'baseline', ...TABNUM }}>
+                        <span style={{ fontSize: isMobile ? 56 : 64, fontWeight: 600, color: '#fff', lineHeight: 1 }}>$</span>
+                        <input
+                          type="number" step="0.01" min="0"
+                          value={facilityPrice || ''}
+                          onChange={e => setPricing(p => ({ ...p, [facility.priceKey]: parseFloat(e.target.value) || 0 }))}
+                          style={{
+                            width: isMobile ? 120 : 140,
+                            padding: '0 6px',
+                            fontSize: isMobile ? 56 : 64, fontWeight: 600, color: '#fff',
+                            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: 8, outline: 'none', lineHeight: 1,
+                            textAlign: 'left', fontFamily: FONT, ...TABNUM,
+                          }}
+                        />
+                        <span style={{ fontSize: isMobile ? 22 : 26, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>
+                      </div>
+                    ) : (
+                      <div style={{ ...TABNUM }}>
+                        <span style={{ fontSize: isMobile ? 56 : 64, fontWeight: 600, color: '#fff', lineHeight: 1 }}>
+                          ${facilityPrice > 0 ? facilityPrice.toFixed(2) : '—'}
+                        </span>
+                        {facilityPrice > 0 && <span style={{ fontSize: isMobile ? 22 : 26, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>}
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-            {/* Right — spot rate */}
-            <div style={{ textAlign: isMobile ? 'left' : 'right' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Spot rate</div>
-              {editingPricing ? (
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: isMobile ? 'flex-start' : 'flex-end', ...TABNUM }}>
-                  <span style={{ fontSize: isMobile ? 56 : 72, fontWeight: 600, color: '#fff', lineHeight: 1 }}>$</span>
-                  <input
-                    type="number" step="0.01" min="0"
-                    value={pricing.tier3Price || ''}
-                    onChange={e => setPricing(p => ({ ...p, tier3Price: parseFloat(e.target.value) || 0 }))}
-                    style={{
-                      width: isMobile ? 120 : 160,
-                      padding: '0 6px',
-                      fontSize: isMobile ? 56 : 72, fontWeight: 600, color: '#fff',
-                      background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
-                      borderRadius: 8, outline: 'none', lineHeight: 1,
-                      textAlign: isMobile ? 'left' : 'right', fontFamily: FONT, ...TABNUM,
-                    }}
-                  />
-                  <span style={{ fontSize: isMobile ? 22 : 28, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>
-                </div>
-              ) : (
-                <div style={{ ...TABNUM }}>
-                  <span style={{ fontSize: isMobile ? 56 : 72, fontWeight: 600, color: '#fff', lineHeight: 1 }}>
-                    ${bestPrice > 0 ? bestPrice.toFixed(2) : '—'}
-                  </span>
-                  {bestPrice > 0 && <span style={{ fontSize: isMobile ? 22 : 28, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>}
-                </div>
-              )}
-            </div>
+              );
+            })}
           </div>
+
+          {/* Shared pricing period editor — only when editing */}
+          {editingPricing && canEdit && (
+            <div style={{
+              marginTop: 16, padding: '16px 20px',
+              background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12,
+              display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+            }}>
+              <div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Pricing period</div>
+              <input type="date" value={pricing.periodStart} onChange={e => setPricing(p => ({ ...p, periodStart: e.target.value }))}
+                style={{ padding: '8px 12px', fontSize: 14, color: '#0F172A', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, fontFamily: FONT, ...TABNUM }} />
+              <span style={{ fontSize: 13, color: '#475569' }}>to</span>
+              <input type="date" value={pricing.periodEnd} onChange={e => setPricing(p => ({ ...p, periodEnd: e.target.value }))}
+                style={{ padding: '8px 12px', fontSize: 14, color: '#0F172A', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, fontFamily: FONT, ...TABNUM }} />
+            </div>
+          )}
         </div>
 
-        {/* ── FOOTNOTE BELOW HERO ── */}
+        {/* ── FOOTNOTE BELOW CARDS ── */}
         <div style={{
           fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: '#475569',
-          fontWeight: 400, marginTop: 24, marginBottom: 32,
+          fontWeight: 400, marginTop: 20, marginBottom: 32,
         }}>
           Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
           <a
@@ -535,7 +555,7 @@ export default function App() {
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
         .pulse-dot{animation:pulse 2s ease-in-out infinite;}
         .contact-link:hover{color:${BRAND.teal}!important;text-decoration:underline;}
-        .justify-copy{text-align:justify;hyphens:auto;-webkit-hyphens:auto;word-spacing:0.02em;}
+        .justify-copy{text-align:left;}
         .anchor-nav::-webkit-scrollbar{display:none;}
         @media(max-width:768px){body{font-size:14px;}}
       `}</style>
