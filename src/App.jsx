@@ -272,10 +272,11 @@ export default function App() {
 
         {/* ── PAGE TITLE BLOCK ── */}
         <section aria-labelledby="portal-title" style={{ marginTop: 40, marginBottom: 48 }}>
+          <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 8 }} />
           <h1 id="portal-title" style={{
-            fontSize: isMobile ? 22 : 28, fontWeight: 600, color: '#0F172A',
-            letterSpacing: '0.02em', lineHeight: 1.2, margin: '0 0 16px',
-            maxWidth: 680, textTransform: 'uppercase',
+            fontSize: 11, fontWeight: 600, color: '#64748B',
+            textTransform: 'uppercase', letterSpacing: '0.12em',
+            margin: '0 0 8px',
           }}>
             Water Availability &amp; Pricing Dashboard
           </h1>
@@ -349,26 +350,6 @@ export default function App() {
 
         {/* ── PRICING TABLE ── */}
         <div style={{ marginBottom: sp }}>
-          {/* Italic intro line above tier table */}
-          <div style={{
-            fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: '#475569',
-            fontWeight: 400, marginBottom: 24,
-          }}>
-            Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
-            <a
-              href="#contact"
-              onClick={e => {
-                e.preventDefault();
-                setActiveAnchor('contact');
-                spySuppressed.current = true;
-                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                setTimeout(() => { spySuppressed.current = false; }, 600);
-              }}
-              className="contact-link"
-              style={{ color: BRAND.teal, textDecoration: 'none', fontStyle: 'italic' }}
-            >contact us</a> directly.
-          </div>
-
           {/* Column headers */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', padding: '0 0 10px', marginBottom: 4,
@@ -418,6 +399,25 @@ export default function App() {
             );
           })}
 
+          {/* Italic footnote below tier table */}
+          <div style={{
+            fontSize: 14, fontStyle: 'italic', lineHeight: 1.6, color: '#475569',
+            fontWeight: 400, marginTop: 24,
+          }}>
+            Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
+            <a
+              href="#contact"
+              onClick={e => {
+                e.preventDefault();
+                setActiveAnchor('contact');
+                spySuppressed.current = true;
+                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => { spySuppressed.current = false; }, 600);
+              }}
+              className="contact-link"
+              style={{ color: BRAND.teal, textDecoration: 'none', fontStyle: 'italic' }}
+            >contact us</a> directly.
+          </div>
         </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
@@ -494,18 +494,19 @@ export default function App() {
         <div id="terms" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Purchase &amp; Transfer Terms</SectionLabel>
           <div className="justify-copy" style={{ fontSize: 15, color: '#0F172A', lineHeight: 1.6, maxWidth: 720 }}>
-            <p style={{ margin: '0 0 16px', fontWeight: 400 }}>
-              <span style={{ fontWeight: 500 }}>Pricing cycle.</span> Rates are fixed for a two-week period and refreshed at the start of each new cycle.
-            </p>
-            <p style={{ margin: '0 0 16px', fontWeight: 400 }}>
-              <span style={{ fontWeight: 500 }}>Pickup window.</span> Confirmed purchases must be withdrawn from the designated facility pond within 45 days of execution, either by the buyer directly or through arranged transfer services.
-            </p>
-            <p style={{ margin: '0 0 16px', fontWeight: 400 }}>
-              <span style={{ fontWeight: 500 }}>Transfer.</span> Transfer from the facility pond to the buyer&apos;s designated location is available upon request and quoted separately.
-            </p>
-            <p style={{ margin: 0, fontWeight: 400 }}>
-              <span style={{ fontWeight: 500 }}>Title &amp; custody.</span> Title and custody transfer to the buyer at the withdrawal point &mdash; the buyer&apos;s point of pickup at the designated facility pond (e.g., Mills Ranch 1 Facility or Fed128 Facility) &mdash; unless otherwise agreed in writing.
-            </p>
+            {[
+              { label: 'Pricing cycle', body: 'Rates are fixed for a two-week period and refreshed at the start of each cycle.' },
+              { label: 'Pickup window', body: 'Withdraw of confirmed volumes must commence within 45 days of agreement execution from the designated facility pond. Withdrawal may be performed by the buyer or through arranged transfer services.' },
+              { label: 'Transfer', body: 'Transfer from the facility pond to the buyer’s designated delivery point is available upon request and quoted separately.' },
+              { label: 'Title & custody', body: 'Title and custody transfer to the buyer at the point of withdrawal (i.e., the designated facility pond, including but not limited to Mills Ranch 1 or Fed128), unless otherwise agreed in writing.' },
+            ].map((item, i, arr) => (
+              <p key={item.label} style={{ margin: i === arr.length - 1 ? 0 : '0 0 16px', fontWeight: 400, display: 'flex', gap: 12 }}>
+                <span style={{ color: '#CBD5E1', flexShrink: 0, lineHeight: 1.6 }} aria-hidden="true">&bull;</span>
+                <span>
+                  <span style={{ fontWeight: 500 }}>{item.label}:</span> {item.body}
+                </span>
+              </p>
+            ))}
           </div>
         </div>
 
