@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { loadPricing, savePricing } from './lib/db.js';
-// Auth helpers (signIn, signOut, loadUserRole, supabase.auth) available in
-// './lib/supabase.js' and './lib/db.js' if auth gate is re-enabled later.
+// Auth + DB helpers (signIn, signOut, loadPricing, savePricing, loadUserRole,
+// supabase.auth) available in './lib/supabase.js' and './lib/db.js' if the
+// auth gate or DB-driven pricing is re-enabled later.
 import iwsLogo from './assets/IWS-Symbol-color.png';
 import operatorMap from './assets/operator newsletter 2026.04.07.png';
 
@@ -21,7 +21,30 @@ function formatDateShort(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
 }
 
-const DEFAULT_PRICING = { id: 1, tier1Price: 0, tier2Price: 0, tier3Price: 0, notes: '', periodStart: '', periodEnd: '' };
+// ═══════════════════════════════════════════════════════════════════════════
+// SPOT PRICING CONFIG — authoritative values for the portal.
+// Update these values and redeploy to change the rates shown on the portal.
+// Refreshed every 2-week cycle.
+// ═══════════════════════════════════════════════════════════════════════════
+const FACILITY_PRICING = {
+  mills_ranch: {
+    name: 'Mills Ranch 1 Facility',
+    location: 'Eddy County, NM',
+    price: 0.10,
+  },
+  fed128: {
+    name: 'Fed128 Facility',
+    location: 'Eddy County, NM',
+    price: 0.11,
+  },
+};
+
+// Pricing cycle window shown in the sticky status bar.
+// Format: YYYY-MM-DD. Update each cycle start.
+const PRICING_CYCLE = {
+  start: '2026-04-20',
+  end:   '2026-05-04',
+};
 
 const BRAND = {
   blue: '#1A6FB5',
@@ -43,27 +66,15 @@ function SectionLabel({ children }) {
 
 export default function App() {
   const isMobile = useIsMobile();
-  // ── AUTH GATE REMOVED ───────────────────────────────────────────────────────
-  // Site is now open. To re-enable login later, restore the session/userRole
-  // state, the login form render, and the auth gate conditional. The helpers
-  // (signIn, signOut) and supabase.auth.* calls live in supabase.js / db.js.
-  // Operators land directly on the dashboard. Read-only by default — edit
-  // functionality is hidden because canEdit is always false below.
-  const [pricing, setPricing] = useState(DEFAULT_PRICING);
-  const [pricingLoading, setPricingLoading] = useState(true);
-  const [editingPricing, setEditingPricing] = useState(false);
+  // Open-access, code-driven pricing. To re-enable Supabase-driven pricing
+  // or the auth gate, see commit history. Helpers remain in ./lib/*.
   const [activeAnchor, setActiveAnchor] = useState('pricing');
   const [scrolled, setScrolled] = useState(false);
   const spySuppressed = React.useRef(false);
   const observerRef = React.useRef(null);
 
-  // Open-access mode: no session, no role lookup. Edit controls always hidden.
-  const canEdit = false;
-
   // IntersectionObserver scroll-spy + scrolled shadow + bottom-of-page edge case
   useEffect(() => {
-    if (pricingLoading) return;
-
     const timer = setTimeout(() => {
       const sectionIds = ['pricing', 'service-area', 'quality', 'terms', 'contact', 'disclosures'];
       const visibleSet = new Set();
@@ -100,25 +111,8 @@ export default function App() {
       observerRef.current?.observer?.disconnect();
       window.removeEventListener('scroll', scrollHandler);
     };
-  }, [pricingLoading]);
-
-  // Load pricing on mount — no auth needed
-  useEffect(() => {
-    (async () => {
-      const pricingData = await loadPricing();
-      setPricing(pricingData || DEFAULT_PRICING);
-      setPricingLoading(false);
-    })();
   }, []);
 
-  function handleSavePricing() { savePricing(pricing); setEditingPricing(false); }
-
-  // ── LOADING ─────────────────────────────────────────────────────────────────
-  if (pricingLoading) return (
-    <div style={{ minHeight: '100vh', background: '#fafbfc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}>
-      <div style={{ fontSize: 14, color: '#94A3B8' }}>Loading…</div>
-    </div>
-  );
 
   // ── MAIN ────────────────────────────────────────────────────────────────────
   const sp = isMobile ? 24 : 32;
@@ -159,15 +153,15 @@ export default function App() {
             <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
             <span>LIVE · MILLS RANCH + FED128 · EDDY COUNTY, NM</span>
           </div>
-          {!isMobile && pricing.periodStart && pricing.periodEnd && (
+          {!isMobile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>CYCLE: {formatDateShort(pricing.periodStart)} – {formatDateShort(pricing.periodEnd)}</span>
+              <span>CYCLE: {formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
               <span style={{ color: '#CBD5E1' }}> · </span>
-              <span>NEXT REFRESH: {formatDateShort(pricing.periodEnd)}</span>
+              <span>NEXT REFRESH: {formatDateShort(PRICING_CYCLE.end)}</span>
             </div>
           )}
-          {isMobile && pricing.periodStart && pricing.periodEnd && (
-            <span style={{ fontSize: 10 }}>{formatDateShort(pricing.periodStart)} – {formatDateShort(pricing.periodEnd)}</span>
+          {isMobile && (
+            <span style={{ fontSize: 10 }}>{formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
           )}
         </div>
 
@@ -238,108 +232,54 @@ export default function App() {
             gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
             gap: isMobile ? 16 : 24,
           }}>
-            {[
-              { name: 'Mills Ranch 1 Facility', priceKey: 'tier3Price' },
-              { name: 'Fed128 Facility',        priceKey: 'tier2Price' },
-            ].map((facility, idx) => {
-              const facilityPrice = pricing[facility.priceKey];
-              return (
-                <div key={facility.name} style={{
-                  background: '#0B1220', borderRadius: 20,
-                  padding: isMobile ? '28px 24px' : '32px 28px',
-                  color: '#fff',
-                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                  gap: 24,
-                }}>
-                  {/* Top — meta */}
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                      <div style={{ width: 2, height: 24, background: BRAND.teal, borderRadius: 1 }} />
-                      <h2 style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
-                        SPOT PRICING · TREATED PRODUCED WATER
-                      </h2>
-                    </div>
-                    <div style={{ marginBottom: 14 }}>
-                      <div style={{
-                        fontSize: isMobile ? 16 : 18, fontWeight: 600, color: '#FFFFFF',
-                        letterSpacing: '-0.01em', lineHeight: 1.3,
-                      }}>
-                        {facility.name}
-                      </div>
-                      <div style={{
-                        fontSize: isMobile ? 13 : 14, fontWeight: 400, color: '#94A3B8',
-                        lineHeight: 1.4, marginTop: 2,
-                      }}>
-                        Eddy County, NM
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Pickup at pond</span>
-                      <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Transfer available on request</span>
-                    </div>
-                    {canEdit && (
-                      <div style={{ marginTop: 20 }}>
-                        <button onClick={() => editingPricing ? handleSavePricing() : setEditingPricing(true)} style={{
-                          padding: '8px 18px', fontSize: 13, fontWeight: 500, borderRadius: 8, cursor: 'pointer', fontFamily: FONT,
-                          background: editingPricing ? '#fff' : 'transparent',
-                          color: editingPricing ? '#0B1220' : '#fff',
-                          border: editingPricing ? 'none' : '1px solid rgba(255,255,255,0.2)',
-                        }}>
-                          {editingPricing ? '✓ Save pricing' : '✎ Edit pricing'}
-                        </button>
-                      </div>
-                    )}
+            {Object.values(FACILITY_PRICING).map((facility) => (
+              <div key={facility.name} style={{
+                background: '#0B1220', borderRadius: 20,
+                padding: isMobile ? '24px 24px' : '28px 28px',
+                color: '#fff',
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                gap: 20,
+              }}>
+                {/* Top — meta */}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 2, height: 24, background: BRAND.teal, borderRadius: 1 }} />
+                    <h2 style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
+                      SPOT PRICING · TREATED PRODUCED WATER
+                    </h2>
                   </div>
-                  {/* Bottom — spot rate */}
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Spot rate</div>
-                    {editingPricing ? (
-                      <div style={{ display: 'flex', alignItems: 'baseline', ...TABNUM }}>
-                        <span style={{ fontSize: isMobile ? 56 : 64, fontWeight: 600, color: '#fff', lineHeight: 1 }}>$</span>
-                        <input
-                          type="number" step="0.01" min="0"
-                          value={facilityPrice || ''}
-                          onChange={e => setPricing(p => ({ ...p, [facility.priceKey]: parseFloat(e.target.value) || 0 }))}
-                          style={{
-                            width: isMobile ? 120 : 140,
-                            padding: '0 6px',
-                            fontSize: isMobile ? 56 : 64, fontWeight: 600, color: '#fff',
-                            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
-                            borderRadius: 8, outline: 'none', lineHeight: 1,
-                            textAlign: 'left', fontFamily: FONT, ...TABNUM,
-                          }}
-                        />
-                        <span style={{ fontSize: isMobile ? 22 : 26, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>
-                      </div>
-                    ) : (
-                      <div style={{ ...TABNUM }}>
-                        <span style={{ fontSize: isMobile ? 56 : 64, fontWeight: 600, color: '#fff', lineHeight: 1 }}>
-                          ${facilityPrice > 0 ? facilityPrice.toFixed(2) : '—'}
-                        </span>
-                        {facilityPrice > 0 && <span style={{ fontSize: isMobile ? 22 : 26, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>}
-                      </div>
-                    )}
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{
+                      fontSize: isMobile ? 16 : 18, fontWeight: 600, color: '#FFFFFF',
+                      letterSpacing: '-0.01em', lineHeight: 1.3,
+                    }}>
+                      {facility.name}
+                    </div>
+                    <div style={{
+                      fontSize: isMobile ? 13 : 14, fontWeight: 400, color: '#94A3B8',
+                      lineHeight: 1.4, marginTop: 2,
+                    }}>
+                      {facility.location}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Pickup at pond</span>
+                    <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Transfer available on request</span>
                   </div>
                 </div>
-              );
-            })}
+                {/* Bottom — spot rate */}
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 6 }}>Spot rate</div>
+                  <div style={{ ...TABNUM }}>
+                    <span style={{ fontSize: isMobile ? 56 : 64, fontWeight: 600, color: '#fff', lineHeight: 1 }}>
+                      ${facility.price.toFixed(2)}
+                    </span>
+                    <span style={{ fontSize: isMobile ? 22 : 26, fontWeight: 400, color: '#64748B', marginLeft: 4 }}>/bbl</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-
-          {/* Shared pricing period editor — only when editing */}
-          {editingPricing && canEdit && (
-            <div style={{
-              marginTop: 16, padding: '16px 20px',
-              background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12,
-              display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-            }}>
-              <div style={{ fontSize: 11, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Pricing period</div>
-              <input type="date" value={pricing.periodStart} onChange={e => setPricing(p => ({ ...p, periodStart: e.target.value }))}
-                style={{ padding: '8px 12px', fontSize: 14, color: '#0F172A', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, fontFamily: FONT, ...TABNUM }} />
-              <span style={{ fontSize: 13, color: '#475569' }}>to</span>
-              <input type="date" value={pricing.periodEnd} onChange={e => setPricing(p => ({ ...p, periodEnd: e.target.value }))}
-                style={{ padding: '8px 12px', fontSize: 14, color: '#0F172A', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, fontFamily: FONT, ...TABNUM }} />
-            </div>
-          )}
         </div>
 
         {/* ── FOOTNOTE BELOW CARDS ── */}
