@@ -298,7 +298,7 @@ export default function App() {
               </div>
               <div style={{ fontSize: 15, color: '#E2E8F0', fontWeight: 400, marginBottom: 14 }}>Mills Ranch · Eddy County, NM</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>FOB pickup</span>
+                <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Pickup at pond</span>
                 <span style={{ fontSize: 11, padding: '4px 12px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }}>Transfer available on request</span>
               </div>
               {canEdit && (
@@ -392,7 +392,7 @@ export default function App() {
           })}
 
           <div style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, marginTop: 12 }}>
-            Rates shown are FOB at the facility pond and reflect pickup only. Transfer services are available upon request. Pricing is published on a two-week cycle.
+            Rates shown are for pickup at the facility pond. Transfer services are available upon request. Pricing is published on a two-week cycle.
           </div>
         </div>
 
@@ -403,9 +403,9 @@ export default function App() {
           <SectionLabel>Purchase &amp; Transfer Terms</SectionLabel>
           <div style={{ fontSize: 15, color: '#64748B', lineHeight: 1.7 }}>
             <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Pricing cycle.</strong> Rates are fixed for a two-week period and refreshed at the start of each new cycle.</p>
-            <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Pickup window.</strong> Confirmed purchases must be picked up from the designated facility pond within 45 days of execution, either by the buyer (FOB) or through arranged transfer services.</p>
-            <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Transfer.</strong> Transfer from the designated facility pond to the buyer&apos;s designated location is available upon request and quoted separately.</p>
-            <p style={{ margin: 0 }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Title &amp; custody.</strong> Title and custody transfer to the buyer at the delivery point &mdash; defined as the buyer&apos;s point of withdrawal at the designated facility pond (e.g., Mills Ranch 1 Facility or Fed128 Facility) &mdash; unless otherwise agreed in writing.</p>
+            <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Pickup window.</strong> Confirmed purchases must be withdrawn from the designated facility pond within 45 days of execution, either by the buyer directly or through arranged transfer services.</p>
+            <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Transfer.</strong> Transfer from the facility pond to the buyer&apos;s designated location is available upon request and quoted separately.</p>
+            <p style={{ margin: 0 }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Title &amp; custody.</strong> Title and custody transfer to the buyer at the withdrawal point &mdash; the buyer&apos;s point of pickup at the designated facility pond (e.g., Mills Ranch 1 Facility or Fed128 Facility) &mdash; unless otherwise agreed in writing.</p>
           </div>
         </div>
 
@@ -454,7 +454,7 @@ export default function App() {
           <SectionLabel>Commercial Terms &amp; Disclosures</SectionLabel>
           <div style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.8 }}>
             <p style={{ margin: '0 0 12px' }}>Pricing is indicative and refreshed on a two-week cycle. All rates and volumes are subject to real-time availability, water quality, system conditions, and prevailing market dynamics, and are not guaranteed until confirmed in a fully executed agreement.</p>
-            <p style={{ margin: '0 0 12px' }}>All pricing is quoted FOB at the delivery point, defined as the buyer&apos;s point of withdrawal at the designated facility pond. Transfer services from the pond to a buyer-designated location are available upon request and governed by separate terms and fees. Confirmed purchases must be picked up within 45 days of execution.</p>
+            <p style={{ margin: '0 0 12px' }}>All pricing is quoted FOB at the facility pond, with title and custody transferring to the buyer at the withdrawal point. Transfer services from the pond to a buyer-designated location are available upon request and governed by separate terms and fees. Confirmed purchases must be withdrawn within 45 days of execution.</p>
             <p style={{ margin: '0 0 12px' }}>Water quality specifications are representative and may vary by source and over time; full specifications are available upon request. Displayed volumes reflect current operational visibility and are subject to change without notice due to system fluctuations, maintenance, or third-party activity.</p>
             <p style={{ margin: 0 }}>Nothing contained herein constitutes a binding offer. All transactions are subject to contract, availability, and final confirmation by Infinity Water Solutions.</p>
           </div>
