@@ -405,7 +405,7 @@ export default function App() {
             <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Pricing cycle.</strong> Rates are fixed for a two-week period and refreshed at the start of each new cycle.</p>
             <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Pickup window.</strong> Confirmed purchases must be picked up from the designated facility pond within 45 days of execution, either by the buyer (FOB) or through arranged transfer services.</p>
             <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Transfer.</strong> Transfer from the designated facility pond to the buyer&apos;s designated location is available upon request and quoted separately.</p>
-            <p style={{ margin: 0 }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Title &amp; custody.</strong> Title and custody transfer to the buyer at the delivery point &mdash; defined as the buyer&apos;s point of withdrawal at the designated facility pond (e.g., Mills Ranch 1 Facility or Fed128) &mdash; unless otherwise agreed in writing.</p>
+            <p style={{ margin: 0 }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Title &amp; custody.</strong> Title and custody transfer to the buyer at the delivery point &mdash; defined as the buyer&apos;s point of withdrawal at the designated facility pond (e.g., Mills Ranch 1 Facility or Fed128 Facility) &mdash; unless otherwise agreed in writing.</p>
           </div>
         </div>
 
