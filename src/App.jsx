@@ -34,7 +34,7 @@ const TABNUM = { fontVariantNumeric: 'tabular-nums' };
 function SectionLabel({ children }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 8 }} />
+      <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 6 }} />
       <div style={{ fontSize: 11, fontWeight: 600, color: '#AEAEB2', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{children}</div>
     </div>
   );
@@ -174,7 +174,7 @@ export default function App() {
     { label: '< 500,000 barrels', key: 'tier1Price', dot: '#94A3B8' },
   ];
 
-  const sp = isMobile ? 40 : 56;
+  const sp = isMobile ? 24 : 32;
 
 
 
@@ -271,12 +271,12 @@ export default function App() {
       <main style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '24px 20px 48px' : '48px 24px 80px', scrollMarginTop: 100 }}>
 
         {/* ── PAGE TITLE BLOCK ── */}
-        <section aria-labelledby="portal-title" style={{ marginTop: 40, marginBottom: 48 }}>
-          <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 8 }} />
+        <section aria-labelledby="portal-title" style={{ marginTop: 40, marginBottom: 32 }}>
+          <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 6 }} />
           <h1 id="portal-title" style={{
             fontSize: 11, fontWeight: 600, color: '#64748B',
             textTransform: 'uppercase', letterSpacing: '0.12em',
-            margin: '0 0 8px',
+            margin: '0 0 16px',
           }}>
             Water Availability &amp; Pricing Dashboard
           </h1>
@@ -292,7 +292,7 @@ export default function App() {
         <div id="pricing" style={{
           background: '#0B1220', borderRadius: 20,
           padding: isMobile ? '28px 24px' : '36px 40px',
-          marginBottom: isMobile ? 28 : 36, color: '#fff',
+          marginBottom: isMobile ? 24 : 32, color: '#fff',
           scrollMarginTop: 100,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'flex-end', flexWrap: 'wrap', gap: isMobile ? 28 : 40 }}>
@@ -425,7 +425,7 @@ export default function App() {
         {/* ── SERVICE AREA ── */}
         <div id="service-area" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Service Area</SectionLabel>
-          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 24px', maxWidth: 640 }}>
+          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
             Current supply is sourced from Infinity Water Solutions&apos; Mills Ranch 1 and Fed 128 facilities in Eddy and Lea County, New Mexico. Rates are quoted for pickup at the facility pond. Transfer services are available upon request and quoted separately.
           </p>
           <img src={operatorMap} alt="Operator service area map" style={{ width: '100%', borderRadius: 20 }} />
@@ -438,17 +438,17 @@ export default function App() {
           <SectionLabel>Water Quality Specifications</SectionLabel>
 
           {/* Page-level descriptive copy */}
-          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
+          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 12px', maxWidth: 640 }}>
             Water quality is representative of treated produced water across Infinity Water Solutions&apos; system and may vary by source, facility, and over time. Water is treated and managed to meet operational requirements for reuse across industrial applications.
           </p>
-          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 32px', maxWidth: 640 }}>
+          <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 20px', maxWidth: 640 }}>
             Quality may be adjusted or blended based on availability and system conditions. Full analytical reports and facility-specific specifications are available upon request. Buyer is responsible for confirming suitability for intended use.
           </p>
 
           {/* Dark spec card */}
           <div style={{
             background: '#0B1220', borderRadius: 20,
-            padding: isMobile ? '32px 24px' : '40px 36px',
+            padding: isMobile ? '28px 24px' : '32px 36px',
             color: '#fff',
           }}>
             {/* Column headers */}
@@ -500,7 +500,7 @@ export default function App() {
               { label: 'Transfer', body: 'Transfer from the facility pond to the buyer’s designated delivery point is available upon request and quoted separately.' },
               { label: 'Title & custody', body: 'Title and custody transfer to the buyer at the point of withdrawal (i.e., the designated facility pond, including but not limited to Mills Ranch 1 or Fed128), unless otherwise agreed in writing.' },
             ].map((item, i, arr) => (
-              <p key={item.label} style={{ margin: i === arr.length - 1 ? 0 : '0 0 16px', fontWeight: 400, display: 'flex', gap: 12 }}>
+              <p key={item.label} style={{ margin: i === arr.length - 1 ? 0 : '0 0 10px', fontWeight: 400, display: 'flex', gap: 12 }}>
                 <span style={{ color: '#CBD5E1', flexShrink: 0, lineHeight: 1.6 }} aria-hidden="true">&bull;</span>
                 <span>
                   <span style={{ fontWeight: 500 }}>{item.label}:</span> {item.body}
@@ -551,10 +551,10 @@ export default function App() {
         <div id="disclosures" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Commercial Terms &amp; Disclosures</SectionLabel>
           <div className="justify-copy" style={{ fontSize: 11, color: '#64748B', lineHeight: 1.7, fontWeight: 400, maxWidth: 720 }}>
-            <p style={{ margin: '0 0 10px' }}>All pricing and volumes are indicative and subject to change based on availability, water quality, system conditions, and market dynamics. Pricing and availability are not guaranteed until confirmed in a fully executed agreement.</p>
-            <p style={{ margin: '0 0 10px' }}>All pricing is quoted FOB at the facility pond.</p>
-            <p style={{ margin: '0 0 10px' }}>Water quality specifications are representative and may vary by source and over time. Full specifications are available upon request.</p>
-            <p style={{ margin: '0 0 10px' }}>Displayed volumes reflect current operational visibility and are subject to change without notice.</p>
+            <p style={{ margin: '0 0 8px' }}>All pricing and volumes are indicative and subject to change based on availability, water quality, system conditions, and market dynamics. Pricing and availability are not guaranteed until confirmed in a fully executed agreement.</p>
+            <p style={{ margin: '0 0 8px' }}>All pricing is quoted FOB at the facility pond.</p>
+            <p style={{ margin: '0 0 8px' }}>Water quality specifications are representative and may vary by source and over time. Full specifications are available upon request.</p>
+            <p style={{ margin: '0 0 8px' }}>Displayed volumes reflect current operational visibility and are subject to change without notice.</p>
             <p style={{ margin: 0 }}>Nothing contained herein constitutes a binding offer. All transactions are subject to contract, availability, and final confirmation by Infinity Water Solutions.</p>
           </div>
         </div>
