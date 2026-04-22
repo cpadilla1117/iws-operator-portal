@@ -169,9 +169,9 @@ export default function App() {
   const bestPrice = pricing.tier3Price || pricing.tier2Price || pricing.tier1Price;
 
   const TIERS = [
-    { label: '< 500,000 barrels', key: 'tier1Price', dot: '#94A3B8' },
-    { label: '500,000 – 1,000,000 barrels', key: 'tier2Price', dot: BRAND.blue },
     { label: '> 1,000,000 barrels', key: 'tier3Price', dot: BRAND.teal, best: true },
+    { label: '500,000 – 1,000,000 barrels', key: 'tier2Price', dot: BRAND.blue },
+    { label: '< 500,000 barrels', key: 'tier1Price', dot: '#94A3B8' },
   ];
 
   const sp = isMobile ? 40 : 56;
@@ -396,7 +396,19 @@ export default function App() {
           })}
 
           <div style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, marginTop: 12 }}>
-            Rates shown are for pickup at the facility pond. Transfer services are available upon request. Pricing is published on a two-week cycle.
+            Pricing reflects spot availability. For larger volumes or longer-term arrangements, please{' '}
+            <a
+              href="#contact"
+              onClick={e => {
+                e.preventDefault();
+                setActiveAnchor('contact');
+                spySuppressed.current = true;
+                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setTimeout(() => { spySuppressed.current = false; }, 600);
+              }}
+              className="contact-link"
+              style={{ color: BRAND.teal, textDecoration: 'none' }}
+            >contact us</a> directly.
           </div>
         </div>
 
@@ -417,39 +429,54 @@ export default function App() {
         <div id="quality" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Water Quality Specifications</SectionLabel>
 
-          {/* Column headers */}
+          {/* Page-level descriptive copy */}
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
+            Water quality is representative of treated produced water across Infinity Water Solutions&apos; system and may vary by source, facility, and over time. Water is treated and managed to meet operational requirements for reuse across industrial applications.
+          </p>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 32px', maxWidth: 640 }}>
+            Quality may be adjusted or blended based on availability and system conditions. Full analytical reports and facility-specific specifications are available upon request. Buyer is responsible for confirming suitability for intended use.
+          </p>
+
+          {/* Dark spec card */}
           <div style={{
-            display: 'flex', justifyContent: 'space-between', padding: '0 0 10px', marginBottom: 4,
-            fontSize: 11, fontWeight: 600, color: '#64748B', letterSpacing: '0.1em', textTransform: 'uppercase',
+            background: '#0B1220', borderRadius: 20,
+            padding: isMobile ? '32px 24px' : '40px 36px',
+            color: '#fff',
           }}>
-            <span>Parameter</span>
-            <span>Value</span>
-          </div>
-
-          {[
-            { param: 'pH', value: '6.00 – 6.50', unit: '' },
-            { param: 'Iron (Fe)', value: '< 2', unit: 'mg/L' },
-            { param: 'Turbidity', value: '< 10', unit: 'NTU' },
-            { param: 'ORP', value: '> 350', unit: 'mV' },
-            { param: 'TDS', value: '160,000 – 200,000', unit: 'ppm' },
-          ].map((row) => (
-            <div key={row.param} style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: isMobile ? '18px 0' : '22px 0',
+            {/* Column headers */}
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', padding: '0 0 10px', marginBottom: 4,
+              fontSize: 11, fontWeight: 600, color: '#94A3B8', letterSpacing: '0.1em', textTransform: 'uppercase',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: BRAND.teal, flexShrink: 0 }} />
-                <span style={{ fontSize: 15, fontWeight: 500, color: '#0F172A' }}>{row.param}</span>
-              </div>
-              <span style={{ fontSize: 16, fontWeight: 500, color: '#0F172A', ...TABNUM }}>
-                {row.value}
-                {row.unit && <span style={{ fontSize: 13, fontWeight: 400, color: '#0F172A', opacity: 0.6, marginLeft: 4 }}>{row.unit}</span>}
-              </span>
+              <span>Parameter</span>
+              <span>Value</span>
             </div>
-          ))}
 
-          <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.6, marginTop: 16 }}>
-            Values are representative and may vary by source and over time. Full analytical reports available upon request.
+            {[
+              { param: 'pH', value: '6.00 – 6.50', unit: '' },
+              { param: 'Iron (Fe)', value: '< 2', unit: 'mg/L' },
+              { param: 'Turbidity', value: '< 10', unit: 'NTU' },
+              { param: 'ORP', value: '> 350', unit: 'mV' },
+              { param: 'TDS', value: '160,000 – 200,000', unit: 'ppm' },
+            ].map((row) => (
+              <div key={row.param} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: isMobile ? '18px 0' : '22px 0',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: BRAND.teal, flexShrink: 0 }} />
+                  <span style={{ fontSize: 15, fontWeight: 500, color: '#fff' }}>{row.param}</span>
+                </div>
+                <span style={{ fontSize: 16, fontWeight: 500, color: '#fff', ...TABNUM }}>
+                  {row.value}
+                  {row.unit && <span style={{ fontSize: 13, fontWeight: 400, color: '#94A3B8', marginLeft: 4 }}>{row.unit}</span>}
+                </span>
+              </div>
+            ))}
+
+            <div style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.6, marginTop: 16 }}>
+              Values are representative and may vary by source and over time. Full analytical reports available upon request.
+            </div>
           </div>
         </div>
 
@@ -458,11 +485,19 @@ export default function App() {
         {/* ── PURCHASE & TRANSFER TERMS ── */}
         <div id="terms" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Purchase &amp; Transfer Terms</SectionLabel>
-          <div style={{ fontSize: 15, color: '#64748B', lineHeight: 1.7 }}>
-            <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Pricing cycle.</strong> Rates are fixed for a two-week period and refreshed at the start of each new cycle.</p>
-            <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Pickup window.</strong> Confirmed purchases must be withdrawn from the designated facility pond within 45 days of execution, either by the buyer directly or through arranged transfer services.</p>
-            <p style={{ margin: '0 0 12px' }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Transfer.</strong> Transfer from the facility pond to the buyer&apos;s designated location is available upon request and quoted separately.</p>
-            <p style={{ margin: 0 }}><strong style={{ color: '#0F172A', fontWeight: 500 }}>Title &amp; custody.</strong> Title and custody transfer to the buyer at the withdrawal point &mdash; the buyer&apos;s point of pickup at the designated facility pond (e.g., Mills Ranch 1 Facility or Fed128 Facility) &mdash; unless otherwise agreed in writing.</p>
+          <div style={{ fontSize: 15, color: '#0F172A', lineHeight: 1.6, maxWidth: 720 }}>
+            <p style={{ margin: '0 0 16px', fontWeight: 400 }}>
+              <span style={{ fontWeight: 500 }}>Pricing cycle.</span> Rates are fixed for a two-week period and refreshed at the start of each new cycle.
+            </p>
+            <p style={{ margin: '0 0 16px', fontWeight: 400 }}>
+              <span style={{ fontWeight: 500 }}>Pickup window.</span> Confirmed purchases must be withdrawn from the designated facility pond within 45 days of execution, either by the buyer directly or through arranged transfer services.
+            </p>
+            <p style={{ margin: '0 0 16px', fontWeight: 400 }}>
+              <span style={{ fontWeight: 500 }}>Transfer.</span> Transfer from the facility pond to the buyer&apos;s designated location is available upon request and quoted separately.
+            </p>
+            <p style={{ margin: 0, fontWeight: 400 }}>
+              <span style={{ fontWeight: 500 }}>Title &amp; custody.</span> Title and custody transfer to the buyer at the withdrawal point &mdash; the buyer&apos;s point of pickup at the designated facility pond (e.g., Mills Ranch 1 Facility or Fed128 Facility) &mdash; unless otherwise agreed in writing.
+            </p>
           </div>
         </div>
 
@@ -493,7 +528,12 @@ export default function App() {
           <div style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Volume inquiries</div>
           <div style={{ fontSize: 18, fontWeight: 600, color: '#0F172A' }}>Christian Padilla</div>
           <div style={{ fontSize: 13, fontWeight: 400, color: '#64748B', letterSpacing: '0.01em', marginTop: 4 }}>Commercial &amp; Operations Manager</div>
-          <div style={{ fontSize: 15, color: '#64748B', marginTop: 8, ...TABNUM }}>713-591-1132 · christian@water.energy</div>
+          <div style={{ fontSize: 15, color: '#64748B', marginTop: 12, ...TABNUM }}>
+            <a href="tel:+17135911132" className="contact-link" style={{ color: '#64748B', textDecoration: 'none' }}>713-591-1132</a>
+          </div>
+          <div style={{ fontSize: 15, color: '#64748B', marginTop: 6 }}>
+            <a href="mailto:christian@water.energy" className="contact-link" style={{ color: '#64748B', textDecoration: 'none' }}>christian@water.energy</a>
+          </div>
         </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
@@ -501,10 +541,11 @@ export default function App() {
         {/* ── COMMERCIAL TERMS ── */}
         <div id="disclosures" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
           <SectionLabel>Commercial Terms &amp; Disclosures</SectionLabel>
-          <div style={{ fontSize: 13, color: '#94A3B8', lineHeight: 1.8 }}>
-            <p style={{ margin: '0 0 12px' }}>Pricing is indicative and refreshed on a two-week cycle. All rates and volumes are subject to real-time availability, water quality, system conditions, and prevailing market dynamics, and are not guaranteed until confirmed in a fully executed agreement.</p>
-            <p style={{ margin: '0 0 12px' }}>All pricing is quoted FOB at the facility pond, with title and custody transferring to the buyer at the withdrawal point. Transfer services from the pond to a buyer-designated location are available upon request and governed by separate terms and fees. Confirmed purchases must be withdrawn within 45 days of execution.</p>
-            <p style={{ margin: '0 0 12px' }}>Water quality specifications are representative and may vary by source and over time; full specifications are available upon request. Displayed volumes reflect current operational visibility and are subject to change without notice due to system fluctuations, maintenance, or third-party activity.</p>
+          <div style={{ fontSize: 11, color: '#64748B', lineHeight: 1.7, fontWeight: 400, maxWidth: 720 }}>
+            <p style={{ margin: '0 0 10px' }}>All pricing and volumes are indicative and subject to change based on availability, water quality, system conditions, and market dynamics. Pricing and availability are not guaranteed until confirmed in a fully executed agreement.</p>
+            <p style={{ margin: '0 0 10px' }}>All pricing is quoted FOB at the facility pond.</p>
+            <p style={{ margin: '0 0 10px' }}>Water quality specifications are representative and may vary by source and over time. Full specifications are available upon request.</p>
+            <p style={{ margin: '0 0 10px' }}>Displayed volumes reflect current operational visibility and are subject to change without notice.</p>
             <p style={{ margin: 0 }}>Nothing contained herein constitutes a binding offer. All transactions are subject to contract, availability, and final confirmation by Infinity Water Solutions.</p>
           </div>
         </div>
@@ -522,6 +563,7 @@ export default function App() {
         input:focus,select:focus,textarea:focus{outline:2px solid ${BRAND.blue}!important;outline-offset:1px;border-color:${BRAND.blue}!important;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
         .pulse-dot{animation:pulse 2s ease-in-out infinite;}
+        .contact-link:hover{color:${BRAND.teal}!important;text-decoration:underline;}
         .anchor-nav::-webkit-scrollbar{display:none;}
         @media(max-width:768px){body{font-size:14px;}}
       `}</style>
