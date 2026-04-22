@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './lib/supabase.js';
-import { loadPricing, savePricing, loadUserRole } from './lib/db.js';
+import { loadPricing, savePricing } from './lib/db.js';
+// Auth helpers (signIn, signOut, loadUserRole, supabase.auth) available in
+// './lib/supabase.js' and './lib/db.js' if auth gate is re-enabled later.
 import iwsLogo from './assets/IWS-Symbol-color.png';
 import operatorMap from './assets/operator newsletter 2026.04.07.png';
 
@@ -42,23 +43,27 @@ function SectionLabel({ children }) {
 
 export default function App() {
   const isMobile = useIsMobile();
-  const [session, setSession] = useState(null);
-  const [userRole, setUserRole] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [loginForm, setLoginForm] = useState({ email: '', password: '', error: '', loading: false });
+  // ── AUTH GATE REMOVED ───────────────────────────────────────────────────────
+  // Site is now open. To re-enable login later, restore the session/userRole
+  // state, the login form render, and the auth gate conditional. The helpers
+  // (signIn, signOut) and supabase.auth.* calls live in supabase.js / db.js.
+  // Operators land directly on the dashboard. Read-only by default — edit
+  // functionality is hidden because canEdit is always false below.
   const [pricing, setPricing] = useState(DEFAULT_PRICING);
+  const [pricingLoading, setPricingLoading] = useState(true);
   const [editingPricing, setEditingPricing] = useState(false);
   const [activeAnchor, setActiveAnchor] = useState('pricing');
   const [scrolled, setScrolled] = useState(false);
   const spySuppressed = React.useRef(false);
   const observerRef = React.useRef(null);
 
-  // IntersectionObserver scroll-spy + scrolled shadow + bottom-of-page edge case
-  // Re-runs when session/userRole change so sections are in the DOM
-  useEffect(() => {
-    if (!session || !userRole) return;
+  // Open-access mode: no session, no role lookup. Edit controls always hidden.
+  const canEdit = false;
 
-    // Small delay to ensure DOM has rendered after state update
+  // IntersectionObserver scroll-spy + scrolled shadow + bottom-of-page edge case
+  useEffect(() => {
+    if (pricingLoading) return;
+
     const timer = setTimeout(() => {
       const sectionIds = ['pricing', 'service-area', 'quality', 'terms', 'contact', 'disclosures'];
       const visibleSet = new Set();
@@ -82,7 +87,6 @@ export default function App() {
       observerRef.current = { observer };
     }, 50);
 
-    // Scroll listener for shadow + bottom-of-page edge case
     const scrollHandler = () => {
       setScrolled(window.scrollY > 60);
       if (spySuppressed.current) return;
@@ -96,78 +100,27 @@ export default function App() {
       observerRef.current?.observer?.disconnect();
       window.removeEventListener('scroll', scrollHandler);
     };
-  }, [session, userRole]);
+  }, [pricingLoading]);
 
+  // Load pricing on mount — no auth needed
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => { setSession(s); setAuthLoading(false); });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!session) return;
     (async () => {
-      const email = session.user?.email;
-      const [pricingData, role] = await Promise.all([loadPricing(), loadUserRole(email)]);
-      setUserRole(role);
+      const pricingData = await loadPricing();
       setPricing(pricingData || DEFAULT_PRICING);
+      setPricingLoading(false);
     })();
-  }, [session]);
+  }, []);
 
   function handleSavePricing() { savePricing(pricing); setEditingPricing(false); }
 
-  async function signIn(e) {
-    e.preventDefault();
-    setLoginForm(p => ({ ...p, loading: true, error: '' }));
-    const { error } = await supabase.auth.signInWithPassword({ email: loginForm.email, password: loginForm.password });
-    if (error) setLoginForm(p => ({ ...p, loading: false, error: error.message }));
-    else setLoginForm(p => ({ ...p, loading: false }));
-  }
-
-  function signOut() { supabase.auth.signOut(); setSession(null); setUserRole(null); }
-
   // ── LOADING ─────────────────────────────────────────────────────────────────
-  if (authLoading) return (
+  if (pricingLoading) return (
     <div style={{ minHeight: '100vh', background: '#fafbfc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}>
       <div style={{ fontSize: 14, color: '#94A3B8' }}>Loading…</div>
     </div>
   );
 
-  // ── LOGIN ───────────────────────────────────────────────────────────────────
-  if (!session) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#fafbfc', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}>
-        <div style={{ background: '#fff', borderRadius: 20, padding: isMobile ? 32 : 48, width: isMobile ? '90%' : 400, border: '0.5px solid #E2E8F0' }}>
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <img src={iwsLogo} alt="IWS" style={{ height: 48, width: 'auto', marginBottom: 20 }} />
-            <div style={{ fontSize: 24, fontWeight: 600, color: '#0F172A', letterSpacing: '-0.01em' }}>Infinity Water Solutions</div>
-            <div style={{ fontSize: 14, fontWeight: 500, color: '#64748B', marginTop: 6, letterSpacing: '0.04em' }}>Operator Portal</div>
-          </div>
-          <form onSubmit={signIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input type="email" placeholder="Email" required value={loginForm.email}
-              onChange={e => setLoginForm(p => ({ ...p, email: e.target.value }))}
-              style={{ width: '100%', padding: '12px 16px', fontSize: 15, color: '#0F172A', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, outline: 'none', fontFamily: FONT }} />
-            <input type="password" placeholder="Password" required value={loginForm.password}
-              onChange={e => setLoginForm(p => ({ ...p, password: e.target.value }))}
-              style={{ width: '100%', padding: '12px 16px', fontSize: 15, color: '#0F172A', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, outline: 'none', fontFamily: FONT }} />
-            {loginForm.error && <div style={{ color: '#EF4444', fontSize: 13, padding: '8px 12px', background: '#FEF2F2', borderRadius: 8, border: '1px solid #FECACA' }}>{loginForm.error}</div>}
-            <button type="submit" disabled={loginForm.loading} style={{
-              width: '100%', padding: '14px 0', fontSize: 15, fontWeight: 600,
-              background: '#0F172A', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer',
-              opacity: loginForm.loading ? 0.5 : 1, marginTop: 4, fontFamily: FONT,
-            }}>
-              {loginForm.loading ? 'Signing in…' : 'Sign In'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   // ── MAIN ────────────────────────────────────────────────────────────────────
-  const canEdit = userRole === 'owner';
-
-
   const sp = isMobile ? 24 : 32;
 
 
@@ -185,10 +138,6 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src={iwsLogo} alt="IWS" style={{ height: isMobile ? 26 : 30, width: 'auto' }} />
           {!isMobile && <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A' }}>Infinity Water Solutions</div>}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
-          {!isMobile && <span style={{ fontSize: 13, color: '#64748B' }}>{session?.user?.email}</span>}
-          <button onClick={signOut} style={{ fontSize: 13, color: '#64748B', background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT }}>Sign out</button>
         </div>
       </nav>
 
