@@ -697,10 +697,10 @@ export default function App() {
         </div>
       </div>
 
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '24px 20px 48px' : '48px 24px 80px', scrollMarginTop: 100 }}>
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '0 20px 48px' : '0 24px 80px', scrollMarginTop: 100 }}>
 
         {/* ── PAGE TITLE BLOCK ── */}
-        <section aria-labelledby="portal-title" style={{ marginTop: 40, marginBottom: 32 }}>
+        <section aria-labelledby="portal-title" style={{ marginTop: 16, marginBottom: 32 }}>
           <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 6 }} />
           <h1 id="portal-title" style={{
             fontSize: 11, fontWeight: 600, color: '#64748B',
