@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 // supabase.auth) available in './lib/supabase.js' and './lib/db.js' if the
 // auth gate or DB-driven pricing is re-enabled later.
 import iwsLogo from './assets/IWS-Symbol-color.png';
-import operatorMap from './assets/Pricing Dashboard Map v6 white text 2026.04.23.jpg';
+// Service area map now rendered via Google My Maps iframe embed (see
+// Service Area section below). Legacy JPG left in src/assets/ in case
+// we revert — no longer imported.
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -310,7 +312,29 @@ export default function App() {
           <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
             Current supply is sourced from Infinity Water Solutions&apos; Mills Ranch 1 and Fed 128 facilities in Eddy and Lea County, New Mexico. Rates are quoted for pickup at the facility pond. Transfer services are available upon request and quoted separately.
           </p>
-          <img src={operatorMap} alt="Service area map showing Mills Ranch 1 and Fed128 facility locations in Eddy County, NM" style={{ width: '100%', borderRadius: 20 }} />
+          <div className="map-embed-wrapper">
+            <iframe
+              src="https://www.google.com/maps/d/embed?mid=1ssSjowOVDbjxaKxpvO_zK3rrmG0PwgM&ehbc=2E312F"
+              width="100%"
+              height={isMobile ? 360 : 520}
+              style={{ border: 0, borderRadius: '20px', display: 'block' }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Infinity Water Solutions facility locations — Mills Ranch 1 and Fed128 in Eddy County, NM"
+            />
+          </div>
+          <p className="map-fallback" style={{ fontSize: 13, color: '#64748B', margin: '12px 0 0' }}>
+            <a
+              href="https://www.google.com/maps/place/32.329713,-103.824372"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="contact-link"
+              style={{ color: '#64748B', textDecoration: 'none' }}
+            >
+              View facility locations in Google Maps &rarr;
+            </a>
+          </p>
         </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
