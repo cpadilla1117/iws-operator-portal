@@ -301,7 +301,7 @@ function DistanceCalculator({ isMobile }) {
 
   const helperText = format === 'dms'
     ? <>Enter your coordinates to see distance from each facility. Air distance only — actual driving distance may vary. Example: 32&deg; 19&apos; 47.0&quot; N, 103&deg; 49&apos; 27.7&quot; W.</>
-    : <>Enter your latitude and longitude to see straight-line distance to each facility. Values stay on your device.</>;
+    : <>Enter your latitude and longitude to see straight-line distance to each facility.</>;
 
   const formatOptions = [
     { value: 'dd', label: isMobile ? 'DD' : 'Decimal Degrees' },
