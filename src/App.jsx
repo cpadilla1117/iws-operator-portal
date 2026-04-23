@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 // Auth + DB helpers (signIn, signOut, loadPricing, savePricing, loadUserRole,
 // supabase.auth) available in './lib/supabase.js' and './lib/db.js' if the
 // auth gate or DB-driven pricing is re-enabled later.
 import iwsLogo from './assets/IWS-Symbol-color.png';
+import { haversineDistance, bearing, bearingToCardinal, dmsToDd, ddToDms } from './lib/geo.js';
+import { logCoordinateLookup } from './lib/analytics.js';
+
+const COORDS_STORAGE_KEY = 'iws_operator_coords';
+const COORDS_FORMAT_STORAGE_KEY = 'iws_coord_format';
+const COORDS_DEBOUNCE_MS = 400;
+
+const EMPTY_LAT_DMS = { deg: '', min: '', sec: '', hem: 'N' };
+const EMPTY_LON_DMS = { deg: '', min: '', sec: '', hem: 'W' };
 // Service area map now rendered via Google My Maps iframe embed (see
 // Service Area section below). Legacy JPG left in src/assets/ in case
 // we revert — no longer imported.
@@ -33,11 +42,13 @@ const FACILITY_PRICING = {
     name: 'Mills Ranch 1 Facility',
     location: 'Eddy County, NM',
     price: 0.10,
+    coordinates: { lat: 32.329713, lon: -103.824372 },
   },
   fed128: {
     name: 'Fed128 Facility',
     location: 'Eddy County, NM',
     price: 0.11,
+    coordinates: { lat: 32.281858, lon: -103.783619 },
   },
 };
 
@@ -65,6 +76,485 @@ function SectionLabel({ children }) {
     </div>
   );
 }
+
+function parseCoord(value, { min, max }) {
+  if (value === '' || value == null) return { value: null, error: null };
+  const trimmed = String(value).trim();
+  if (!/^-?\d+(\.\d+)?$/.test(trimmed)) {
+    return { value: null, error: 'Enter a number' };
+  }
+  const num = Number(trimmed);
+  if (Number.isNaN(num)) return { value: null, error: 'Enter a number' };
+  if (num < min || num > max) {
+    return { value: null, error: `Must be between ${min} and ${max}` };
+  }
+  return { value: num, error: null };
+}
+
+function parseDmsCoord({ deg, min, sec, hem }, { maxDeg }) {
+  if (deg === '' && min === '' && sec === '') return { value: null, error: null };
+  if (deg === '' || min === '' || sec === '') {
+    return { value: null, error: 'Fill in all three fields' };
+  }
+  const numericRe = /^\d+(\.\d+)?$/;
+  if (!numericRe.test(deg) || !numericRe.test(min) || !numericRe.test(sec)) {
+    return { value: null, error: 'Enter positive numbers' };
+  }
+  const d = Number(deg), m = Number(min), s = Number(sec);
+  if (d < 0 || d > maxDeg) return { value: null, error: `Degrees must be 0–${maxDeg}` };
+  if (m < 0 || m >= 60) return { value: null, error: 'Minutes must be 0–59' };
+  if (s < 0 || s >= 60) return { value: null, error: 'Seconds must be 0–59.999' };
+  return { value: dmsToDd(d, m, s, hem), error: null };
+}
+
+function SegmentedToggle({ value, options, onChange, ariaLabel, size = 'md' }) {
+  const h = size === 'sm' ? 26 : 32;
+  const fontSize = size === 'sm' ? 11 : 13;
+  const padX = size === 'sm' ? 10 : 14;
+  return (
+    <div role="radiogroup" aria-label={ariaLabel} style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap' }}>
+      {options.map((opt) => {
+        const active = value === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(opt.value)}
+            style={{
+              fontFamily: FONT, fontSize, fontWeight: 500,
+              padding: `0 ${padX}px`, height: h, cursor: 'pointer',
+              background: active ? BRAND.teal : 'transparent',
+              color: active ? '#fff' : '#475569',
+              border: active ? `1px solid ${BRAND.teal}` : '1px solid rgba(15,23,42,0.12)',
+              borderRadius: h / 2,
+              transition: 'background 0.12s, color 0.12s, border-color 0.12s',
+              letterSpacing: '0.01em',
+            }}
+          >{opt.label}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+function DistanceCalculator({ isMobile }) {
+  const [format, setFormat] = useState('dd');
+  const [lat, setLat] = useState('');
+  const [lon, setLon] = useState('');
+  const [latDms, setLatDms] = useState(EMPTY_LAT_DMS);
+  const [lonDms, setLonDms] = useState(EMPTY_LON_DMS);
+  const [latTouched, setLatTouched] = useState(false);
+  const [lonTouched, setLonTouched] = useState(false);
+  const [results, setResults] = useState([]);
+  const debounceRef = useRef(null);
+
+  // Hydrate format + coords from localStorage on mount.
+  useEffect(() => {
+    let loadedFormat = 'dd';
+    try {
+      const storedFormat = localStorage.getItem(COORDS_FORMAT_STORAGE_KEY);
+      if (storedFormat === 'dd' || storedFormat === 'dms') {
+        loadedFormat = storedFormat;
+        setFormat(storedFormat);
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      const raw = localStorage.getItem(COORDS_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed.lat !== 'number' || typeof parsed.lon !== 'number') return;
+      if (loadedFormat === 'dd') {
+        setLat(String(parsed.lat));
+        setLon(String(parsed.lon));
+      } else {
+        const latD = ddToDms(parsed.lat, 'lat');
+        const lonD = ddToDms(parsed.lon, 'lon');
+        setLatDms({ deg: String(latD.degrees), min: String(latD.minutes), sec: String(latD.seconds), hem: latD.hemisphere });
+        setLonDms({ deg: String(lonD.degrees), min: String(lonD.minutes), sec: String(lonD.seconds), hem: lonD.hemisphere });
+      }
+    } catch {
+      // ignore malformed storage
+    }
+  }, []);
+
+  const latResolved = useMemo(() => (
+    format === 'dd'
+      ? parseCoord(lat, { min: -90, max: 90 })
+      : parseDmsCoord(latDms, { maxDeg: 89 })
+  ), [format, lat, latDms]);
+
+  const lonResolved = useMemo(() => (
+    format === 'dd'
+      ? parseCoord(lon, { min: -180, max: 180 })
+      : parseDmsCoord(lonDms, { maxDeg: 179 })
+  ), [format, lon, lonDms]);
+
+  const bothValid = latResolved.value !== null && lonResolved.value !== null;
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!bothValid) {
+      setResults([]);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      const userLat = latResolved.value;
+      const userLon = lonResolved.value;
+      const computed = Object.values(FACILITY_PRICING)
+        .map((facility) => {
+          const { lat: fLat, lon: fLon } = facility.coordinates;
+          const distance = haversineDistance(userLat, userLon, fLat, fLon);
+          const brng = bearing(userLat, userLon, fLat, fLon);
+          return {
+            name: facility.name,
+            distance,
+            bearingDeg: brng,
+            cardinal: bearingToCardinal(brng),
+          };
+        })
+        .sort((a, b) => a.distance - b.distance);
+      setResults(computed);
+      try {
+        localStorage.setItem(
+          COORDS_STORAGE_KEY,
+          JSON.stringify({ lat: userLat, lon: userLon })
+        );
+      } catch {
+        // Storage unavailable — calc still works.
+      }
+      logCoordinateLookup(userLat, userLon);
+    }, COORDS_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [bothValid, latResolved.value, lonResolved.value]);
+
+  const handleFormatChange = (next) => {
+    if (next === format) return;
+    setFormat(next);
+    setLat('');
+    setLon('');
+    setLatDms(EMPTY_LAT_DMS);
+    setLonDms(EMPTY_LON_DMS);
+    setLatTouched(false);
+    setLonTouched(false);
+    setResults([]);
+    try {
+      localStorage.setItem(COORDS_FORMAT_STORAGE_KEY, next);
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleClear = () => {
+    setLat('');
+    setLon('');
+    setLatDms(EMPTY_LAT_DMS);
+    setLonDms(EMPTY_LON_DMS);
+    setLatTouched(false);
+    setLonTouched(false);
+    setResults([]);
+    try {
+      localStorage.removeItem(COORDS_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
+  const showLatError = latTouched && latResolved.error;
+  const showLonError = lonTouched && lonResolved.error;
+  const hasAnyValue =
+    format === 'dd'
+      ? (lat !== '' || lon !== '')
+      : (latDms.deg !== '' || latDms.min !== '' || latDms.sec !== '' ||
+         lonDms.deg !== '' || lonDms.min !== '' || lonDms.sec !== '');
+
+  const inputBase = {
+    width: '100%',
+    fontFamily: FONT,
+    fontSize: 15,
+    fontWeight: 400,
+    color: '#0F172A',
+    padding: '10px 0',
+    border: 'none',
+    borderBottom: '1px solid #CBD5E1',
+    borderRadius: 0,
+    background: 'transparent',
+    ...TABNUM,
+  };
+
+  const dmsSmallInput = {
+    ...inputBase,
+    textAlign: 'center',
+    padding: '8px 4px',
+    fontSize: 14,
+  };
+
+  const dmsSep = {
+    fontSize: 14, color: '#94A3B8', padding: '0 4px', lineHeight: 1, alignSelf: 'center',
+    ...TABNUM,
+  };
+
+  const helperText = format === 'dms'
+    ? <>Enter your coordinates to see distance from each facility. Air distance only — actual driving distance may vary. Example: 32&deg; 19&apos; 47.0&quot; N, 103&deg; 49&apos; 27.7&quot; W.</>
+    : <>Enter your latitude and longitude to see straight-line distance to each facility. Values stay on your device.</>;
+
+  const formatOptions = [
+    { value: 'dd', label: isMobile ? 'DD' : 'Decimal Degrees' },
+    { value: 'dms', label: 'DMS' },
+  ];
+
+  const updateLatDms = (key, value) => {
+    setLatDms((prev) => ({ ...prev, [key]: value }));
+  };
+  const updateLonDms = (key, value) => {
+    setLonDms((prev) => ({ ...prev, [key]: value }));
+  };
+
+  return (
+    <div style={{ marginTop: 24 }}>
+      <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, marginBottom: 6 }} />
+      <div style={{
+        fontSize: 11, fontWeight: 600, color: '#64748B',
+        textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6,
+      }}>
+        Distance from your location
+      </div>
+      <p style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5, margin: '0 0 14px', maxWidth: 560 }}>
+        {helperText}
+      </p>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          Format
+        </span>
+        <SegmentedToggle
+          value={format}
+          options={formatOptions}
+          onChange={handleFormatChange}
+          ariaLabel="Coordinate format"
+        />
+      </div>
+
+      {format === 'dd' ? (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: isMobile ? 12 : 20,
+          maxWidth: 480,
+        }}>
+          <div>
+            <label
+              htmlFor="calc-lat"
+              style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}
+            >
+              Latitude
+            </label>
+            <input
+              id="calc-lat"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="32.3297"
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+              onBlur={() => setLatTouched(true)}
+              aria-invalid={Boolean(showLatError)}
+              aria-describedby={showLatError ? 'calc-lat-error' : undefined}
+              style={inputBase}
+            />
+            {showLatError && (
+              <div id="calc-lat-error" style={{ fontSize: 12, color: '#B91C1C', marginTop: 4 }}>
+                {latResolved.error}
+              </div>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="calc-lon"
+              style={{ display: 'block', fontSize: 11, fontWeight: 600, color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}
+            >
+              Longitude
+            </label>
+            <input
+              id="calc-lon"
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="-103.8244"
+              value={lon}
+              onChange={(e) => setLon(e.target.value)}
+              onBlur={() => setLonTouched(true)}
+              aria-invalid={Boolean(showLonError)}
+              aria-describedby={showLonError ? 'calc-lon-error' : undefined}
+              style={inputBase}
+            />
+            {showLonError && (
+              <div id="calc-lon-error" style={{ fontSize: 12, color: '#B91C1C', marginTop: 4 }}>
+                {lonResolved.error}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 520 }}>
+          <DmsRow
+            legend="Latitude"
+            idPrefix="calc-lat-dms"
+            state={latDms}
+            onChange={updateLatDms}
+            onBlur={() => setLatTouched(true)}
+            error={showLatError ? latResolved.error : null}
+            hemOptions={[{ value: 'N', label: 'N' }, { value: 'S', label: 'S' }]}
+            hemLabel="Latitude hemisphere"
+            placeholders={{ deg: '32', min: '19', sec: '47.0' }}
+            dmsSmallInput={dmsSmallInput}
+            dmsSep={dmsSep}
+          />
+          <DmsRow
+            legend="Longitude"
+            idPrefix="calc-lon-dms"
+            state={lonDms}
+            onChange={updateLonDms}
+            onBlur={() => setLonTouched(true)}
+            error={showLonError ? lonResolved.error : null}
+            hemOptions={[{ value: 'E', label: 'E' }, { value: 'W', label: 'W' }]}
+            hemLabel="Longitude hemisphere"
+            placeholders={{ deg: '103', min: '49', sec: '27.7' }}
+            dmsSmallInput={dmsSmallInput}
+            dmsSep={dmsSep}
+          />
+        </div>
+      )}
+
+      {hasAnyValue && (
+        <div style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={handleClear}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              fontFamily: FONT, fontSize: 12, color: '#64748B',
+              cursor: 'pointer', textDecoration: 'underline',
+              textUnderlineOffset: 2,
+            }}
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      <div aria-live="polite" aria-atomic="true" style={{ marginTop: results.length ? 20 : 0 }}>
+        {results.length > 0 && (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, maxWidth: 520 }}>
+            {results.map((r) => (
+              <li
+                key={r.name}
+                style={{
+                  display: 'flex', alignItems: 'baseline', justifyContent: 'space-between',
+                  gap: 16, padding: '10px 0',
+                  borderTop: '1px solid rgba(15,23,42,0.06)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: BRAND.teal, flexShrink: 0 }} />
+                  <span style={{ fontSize: 14, fontWeight: 500, color: '#0F172A' }}>{r.name}</span>
+                </div>
+                <span style={{ fontSize: 14, color: '#334155', ...TABNUM, whiteSpace: 'nowrap' }}>
+                  <span style={{ fontWeight: 600, color: '#0F172A' }}>{r.distance.toFixed(1)} mi</span>
+                  <span style={{ color: '#94A3B8', marginLeft: 6 }}>
+                    {r.cardinal} &middot; {Math.round(r.bearingDeg)}&deg;
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DmsRow({ legend, idPrefix, state, onChange, onBlur, error, hemOptions, hemLabel, placeholders, dmsSmallInput, dmsSep }) {
+  const errorId = `${idPrefix}-error`;
+  return (
+    <fieldset style={{ border: 'none', padding: 0, margin: 0 }} aria-describedby={error ? errorId : undefined}>
+      <legend style={{
+        display: 'block', fontSize: 11, fontWeight: 600, color: '#64748B',
+        textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, padding: 0,
+      }}>
+        {legend}
+      </legend>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          <div style={{ width: 60 }}>
+            <label htmlFor={`${idPrefix}-deg`} style={visuallyHidden}>{legend} degrees</label>
+            <input
+              id={`${idPrefix}-deg`}
+              type="text" inputMode="numeric" autoComplete="off"
+              placeholder={placeholders.deg}
+              value={state.deg}
+              onChange={(e) => onChange('deg', e.target.value)}
+              onBlur={onBlur}
+              aria-invalid={Boolean(error)}
+              style={dmsSmallInput}
+            />
+          </div>
+          <span style={dmsSep}>&deg;</span>
+          <div style={{ width: 60 }}>
+            <label htmlFor={`${idPrefix}-min`} style={visuallyHidden}>{legend} minutes</label>
+            <input
+              id={`${idPrefix}-min`}
+              type="text" inputMode="numeric" autoComplete="off"
+              placeholder={placeholders.min}
+              value={state.min}
+              onChange={(e) => onChange('min', e.target.value)}
+              onBlur={onBlur}
+              aria-invalid={Boolean(error)}
+              style={dmsSmallInput}
+            />
+          </div>
+          <span style={dmsSep}>&apos;</span>
+          <div style={{ width: 72 }}>
+            <label htmlFor={`${idPrefix}-sec`} style={visuallyHidden}>{legend} seconds</label>
+            <input
+              id={`${idPrefix}-sec`}
+              type="text" inputMode="decimal" autoComplete="off"
+              placeholder={placeholders.sec}
+              value={state.sec}
+              onChange={(e) => onChange('sec', e.target.value)}
+              onBlur={onBlur}
+              aria-invalid={Boolean(error)}
+              style={dmsSmallInput}
+            />
+          </div>
+          <span style={dmsSep}>&quot;</span>
+        </div>
+        <SegmentedToggle
+          value={state.hem}
+          options={hemOptions}
+          onChange={(v) => { onChange('hem', v); onBlur(); }}
+          ariaLabel={hemLabel}
+          size="sm"
+        />
+      </div>
+      {error && (
+        <div id={errorId} style={{ fontSize: 12, color: '#B91C1C', marginTop: 6 }}>
+          {error}
+        </div>
+      )}
+    </fieldset>
+  );
+}
+
+const visuallyHidden = {
+  position: 'absolute', width: 1, height: 1, padding: 0, margin: -1,
+  overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0,
+};
 
 export default function App() {
   const isMobile = useIsMobile();
@@ -324,9 +814,10 @@ export default function App() {
               title="Infinity Water Solutions facility locations — Mills Ranch 1 and Fed128 in Eddy County, NM"
             />
           </div>
-          <p className="map-fallback" style={{ fontSize: 13, color: '#64748B', margin: '12px 0 0' }}>
+
+          <p className="map-fallback" style={{ fontSize: 13, color: '#64748B', margin: '8px 0 32px' }}>
             <a
-              href="https://www.google.com/maps/place/32.329713,-103.824372"
+              href="https://www.google.com/maps/d/viewer?mid=1ssSjowOVDbjxaKxpvO_zK3rrmG0PwgM"
               target="_blank"
               rel="noopener noreferrer"
               className="contact-link"
@@ -335,6 +826,8 @@ export default function App() {
               View facility locations in Google Maps &rarr;
             </a>
           </p>
+
+          <DistanceCalculator isMobile={isMobile} />
         </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
