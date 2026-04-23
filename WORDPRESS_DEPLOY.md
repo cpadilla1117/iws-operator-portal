@@ -90,3 +90,46 @@ The authoritative pricing values live at the top of `src/App.jsx`:
 - **PRICING_CYCLE** — start and end dates shown in the sticky status bar
 
 Update these values, commit, run `npm run build`, and re-upload `dist/`.
+
+## Architecture — coupled paths
+
+Future maintainers should understand how three things stay in sync:
+
+| Component | Value |
+|---|---|
+| **Vite `base`** (vite.config.js) | `/wp-content/uploads/pricing-dashboard/` |
+| **WordPress uploads folder** (SFTP target) | `/wp-content/uploads/pricing-dashboard/` |
+| **PHP template `str_replace` call** | `'/pricing/assets/'` → `'/wp-content/uploads/pricing-dashboard/assets/'` (no-op safety net) |
+
+### How it works
+
+1. **Vite build.** Because `base` is set to `/wp-content/uploads/pricing-dashboard/`,
+   every asset reference baked into `index.html` AND into the compiled JS bundle
+   uses the full final URL (`/wp-content/uploads/pricing-dashboard/assets/...`).
+   No server-side rewriting is needed.
+
+2. **WordPress routing.** The page at `water.energy/pricing` is rendered by the
+   `page-pricing.php` template. The template reads `index.html` from disk and
+   echoes it. All asset URLs inside resolve directly because they match where
+   the files actually live.
+
+3. **The `str_replace` inside the PHP template.** It looks for the old
+   `/pricing/assets/` prefix. Since Vite no longer emits that prefix, the
+   replacement finds nothing to replace. It's harmless — left in place as a
+   safety net in case the Vite `base` is ever reverted, or someone uploads
+   an older build that still uses `/pricing/` paths.
+
+### If you change the upload folder name
+
+If the WordPress uploads folder is ever renamed (e.g., to `pricing-v2/`),
+update BOTH the Vite `base` and the PHP template's `str_replace` destination
+to match. Otherwise paths will 404.
+
+### If you revert to the old architecture
+
+If a future change sets Vite `base` back to `/pricing/`, the PHP template's
+`str_replace` becomes active again and rewrites the HTML paths — but it
+cannot rewrite paths baked into the JS bundle. In that case, images loaded
+from JS (like the IWS logo) will 404 until a server rewrite rule is added.
+The current architecture avoids this by matching `base` to the actual
+asset directory directly.
