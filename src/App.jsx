@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 // supabase.auth) available in './lib/supabase.js' and './lib/db.js' if the
 // auth gate or DB-driven pricing is re-enabled later.
 import iwsLogo from './assets/IWS-Symbol-color.png';
-import operatorMap from './assets/operator newsletter 2026.04.07.png';
+import operatorMap from './assets/Pricing Dashboard Map v6 white text 2026.04.23.jpg';
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
@@ -310,7 +310,7 @@ export default function App() {
           <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
             Current supply is sourced from Infinity Water Solutions&apos; Mills Ranch 1 and Fed 128 facilities in Eddy and Lea County, New Mexico. Rates are quoted for pickup at the facility pond. Transfer services are available upon request and quoted separately.
           </p>
-          <img src={operatorMap} alt="Operator service area map" style={{ width: '100%', borderRadius: 20 }} />
+          <img src={operatorMap} alt="Service area map showing Mills Ranch 1 and Fed128 facility locations in Eddy County, NM" style={{ width: '100%', borderRadius: 20 }} />
         </div>
 
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />

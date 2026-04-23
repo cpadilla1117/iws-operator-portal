@@ -97,7 +97,7 @@ Future maintainers should understand how three things stay in sync:
 
 | Component | Value |
 |---|---|
-| **Vite `base`** (vite.config.js) | `/wp-content/uploads/pricing-dashboard/` |
+| **Vite `base`** (vite.config.js) | `/wp-content/uploads/pricing-dashboard/` for local builds; `/` when `NETLIFY=true` is set in the build env |
 | **WordPress uploads folder** (SFTP target) | `/wp-content/uploads/pricing-dashboard/` |
 | **PHP template `str_replace` call** | `'/pricing/assets/'` → `'/wp-content/uploads/pricing-dashboard/assets/'` (no-op safety net) |
 
