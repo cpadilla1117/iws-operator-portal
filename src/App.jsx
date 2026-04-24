@@ -165,7 +165,7 @@ export default function App() {
       <div style={{
         background: '#F8FAFC', borderBottom: '1px solid rgba(15,23,42,0.06)',
         minHeight: isMobile ? 52 : 40,
-        marginTop: isMobile ? 10 : 0,
+        marginTop: isMobile ? 4 : 0,
         padding: isMobile ? '14px 20px' : '0 24px',
         display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
