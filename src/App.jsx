@@ -72,8 +72,10 @@ export default function App() {
   // or the auth gate, see commit history. Helpers remain in ./lib/*.
   const [activeAnchor, setActiveAnchor] = useState('pricing');
   const [scrolled, setScrolled] = useState(false);
+  const [navScrolledLeft, setNavScrolledLeft] = useState(false);
   const spySuppressed = React.useRef(false);
   const observerRef = React.useRef(null);
+  const navScrollRef = React.useRef(null);
 
   // IntersectionObserver scroll-spy + scrolled shadow + bottom-of-page edge case
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function App() {
         for (let i = sectionIds.length - 1; i >= 0; i--) {
           if (visibleSet.has(sectionIds[i])) { setActiveAnchor(sectionIds[i]); return; }
         }
-      }, { rootMargin: '-100px 0px -60% 0px', threshold: 0 });
+      }, { rootMargin: '-50px 0px -60% 0px', threshold: 0 });
 
       sectionIds.forEach(id => {
         const el = document.getElementById(id);
@@ -101,7 +103,8 @@ export default function App() {
     }, 50);
 
     const scrollHandler = () => {
-      setScrolled(window.scrollY > 60);
+      // Nav alone sticks once status bar has scrolled out of view (topbar 55 + status bar 40 = 95).
+      setScrolled(window.scrollY > 90);
       if (spySuppressed.current) return;
       const atBottom = (window.innerHeight + window.scrollY) >= (document.documentElement.scrollHeight - 4);
       if (atBottom) setActiveAnchor('disclosures');
@@ -114,6 +117,27 @@ export default function App() {
       window.removeEventListener('scroll', scrollHandler);
     };
   }, []);
+
+  // Left-edge fade toggle: show only when the nav has been scrolled rightward.
+  useEffect(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    const handler = () => setNavScrolledLeft(el.scrollLeft > 4);
+    handler();
+    el.addEventListener('scroll', handler, { passive: true });
+    return () => el.removeEventListener('scroll', handler);
+  }, []);
+
+  // Auto-scroll the active tab into view on mobile as the scroll-spy updates.
+  useEffect(() => {
+    if (!isMobile) return;
+    const el = navScrollRef.current;
+    if (!el) return;
+    const activeTab = el.querySelector(`[data-anchor-tab="${activeAnchor}"]`);
+    if (activeTab && typeof activeTab.scrollIntoView === 'function') {
+      activeTab.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }, [activeAnchor, isMobile]);
 
 
   // ── MAIN ────────────────────────────────────────────────────────────────────
@@ -133,81 +157,86 @@ export default function App() {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src={iwsLogo} alt="IWS" style={{ height: isMobile ? 26 : 30, width: 'auto' }} />
-          {!isMobile && <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A' }}>Infinity Water Solutions</div>}
+          <div className="site-brand-name" style={{ fontWeight: 600, color: '#0F172A' }}>Infinity Water Solutions</div>
         </div>
       </nav>
 
-      {/* ── STICKY UNIT: STATUS BAR + ANCHOR NAV ── */}
+      {/* ── STATUS BAR (scrolls away — not sticky) ── */}
+      <div style={{
+        background: '#F8FAFC', borderBottom: '1px solid rgba(15,23,42,0.06)',
+        height: 40, padding: '0 24px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        fontSize: 11, fontWeight: 500, color: '#475569', letterSpacing: '0.1em', textTransform: 'uppercase',
+        ...TABNUM,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
+          <span>LIVE · MILLS RANCH + FED128 · EDDY COUNTY, NM</span>
+        </div>
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span>CYCLE: {formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
+            <span style={{ color: '#CBD5E1' }}> · </span>
+            <span>NEXT REFRESH: {formatDateShort(PRICING_CYCLE.end)}</span>
+          </div>
+        )}
+        {isMobile && (
+          <span style={{ fontSize: 10 }}>{formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
+        )}
+      </div>
+
+      {/* ── ANCHOR NAV (sticky, solo) ── */}
       <div style={{
         position: 'sticky', top: 0, zIndex: 100,
         boxShadow: scrolled ? '0 1px 3px rgba(15,23,42,0.06)' : 'none',
         transition: 'box-shadow 0.2s ease',
       }}>
-        {/* Status bar */}
-        <div style={{
+        <div className={`anchor-nav-wrapper${navScrolledLeft ? ' has-scrolled-left' : ''}`} style={{
           background: '#F8FAFC', borderBottom: '1px solid rgba(15,23,42,0.06)',
-          height: 40, padding: '0 24px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          fontSize: 11, fontWeight: 500, color: '#475569', letterSpacing: '0.1em', textTransform: 'uppercase',
-          ...TABNUM,
+          height: 44, position: 'relative',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
-            <span>LIVE · MILLS RANCH + FED128 · EDDY COUNTY, NM</span>
+          <div ref={navScrollRef} className="anchor-nav-scroll">
+            {[
+              { id: 'pricing', label: 'Pricing' },
+              { id: 'service-area', label: 'Service Area' },
+              { id: 'quality', label: 'Water Quality' },
+              { id: 'terms', label: 'Terms' },
+              { id: 'contact', label: 'Contact' },
+              { id: 'disclosures', label: 'Disclosures' },
+            ].map((item, i) => {
+              const isActive = activeAnchor === item.id;
+              return (
+                <span
+                  key={item.id}
+                  data-anchor-tab={item.id}
+                  style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}
+                >
+                  {i > 0 && <span style={{ color: '#CBD5E1', margin: '0 10px', fontSize: 13 }} aria-hidden="true">&middot;</span>}
+                  <a
+                    href={`#${item.id}`}
+                    onClick={e => {
+                      e.preventDefault();
+                      setActiveAnchor(item.id);
+                      spySuppressed.current = true;
+                      document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      setTimeout(() => { spySuppressed.current = false; }, 600);
+                    }}
+                    style={{
+                      fontSize: 13, fontWeight: 500, letterSpacing: '0.05em', textDecoration: 'none', cursor: 'pointer',
+                      color: isActive ? BRAND.teal : '#475569',
+                      borderBottom: isActive ? `2px solid ${BRAND.teal}` : '2px solid transparent',
+                      paddingBottom: 6, transition: 'color 0.15s, border-color 0.15s',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >{item.label}</a>
+                </span>
+              );
+            })}
           </div>
-          {!isMobile && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>CYCLE: {formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
-              <span style={{ color: '#CBD5E1' }}> · </span>
-              <span>NEXT REFRESH: {formatDateShort(PRICING_CYCLE.end)}</span>
-            </div>
-          )}
-          {isMobile && (
-            <span style={{ fontSize: 10 }}>{formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
-          )}
-        </div>
-
-        {/* Anchor nav */}
-        <div style={{
-          background: '#F8FAFC', borderBottom: '1px solid rgba(15,23,42,0.06)',
-          height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
-        }}>
-          {[
-            { id: 'pricing', label: 'Pricing' },
-            { id: 'service-area', label: 'Service Area' },
-            { id: 'quality', label: 'Water Quality' },
-            { id: 'terms', label: 'Terms' },
-            { id: 'contact', label: 'Contact' },
-            { id: 'disclosures', label: 'Disclosures' },
-          ].map((item, i) => {
-            const isActive = activeAnchor === item.id;
-            return (
-              <span key={item.id} style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-                {i > 0 && <span style={{ color: '#CBD5E1', margin: '0 10px', fontSize: 13 }}>&middot;</span>}
-                <a
-                  href={`#${item.id}`}
-                  onClick={e => {
-                    e.preventDefault();
-                    setActiveAnchor(item.id);
-                    spySuppressed.current = true;
-                    document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    setTimeout(() => { spySuppressed.current = false; }, 600);
-                  }}
-                  style={{
-                    fontSize: 13, fontWeight: 500, letterSpacing: '0.05em', textDecoration: 'none', cursor: 'pointer',
-                    color: isActive ? BRAND.teal : '#475569',
-                    borderBottom: isActive ? `2px solid ${BRAND.teal}` : '2px solid transparent',
-                    paddingBottom: 6, transition: 'color 0.15s, border-color 0.15s',
-                  }}
-                >{item.label}</a>
-              </span>
-            );
-          })}
         </div>
       </div>
 
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '0 20px 48px' : '0 24px 80px', scrollMarginTop: 100 }}>
+      <main style={{ maxWidth: 760, margin: '0 auto', padding: isMobile ? '0 20px 48px' : '0 24px 80px', scrollMarginTop: 50 }}>
 
         {/* ── PAGE TITLE BLOCK ── */}
         <section aria-labelledby="portal-title" style={{ marginTop: 16, marginBottom: 32 }}>
@@ -228,7 +257,7 @@ export default function App() {
         </section>
 
         {/* ── TWO FACILITY CARDS ── */}
-        <div id="pricing" style={{ scrollMarginTop: 100 }}>
+        <div id="pricing" style={{ scrollMarginTop: 50 }}>
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
@@ -307,7 +336,7 @@ export default function App() {
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
         {/* ── SERVICE AREA ── */}
-        <div id="service-area" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
+        <div id="service-area" style={{ marginBottom: sp, scrollMarginTop: 50 }}>
           <SectionLabel>Service Area</SectionLabel>
           <p className="justify-copy" style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: '0 0 16px', maxWidth: 640 }}>
             Current supply is sourced from Infinity Water Solutions&apos; Mills Ranch 1 and Fed 128 facilities in Eddy and Lea County, New Mexico. Rates are quoted for pickup at the facility pond. Transfer services are available upon request and quoted separately.
@@ -341,7 +370,7 @@ export default function App() {
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
         {/* ── WATER QUALITY SPECIFICATIONS ── */}
-        <div id="quality" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
+        <div id="quality" style={{ marginBottom: sp, scrollMarginTop: 50 }}>
           <SectionLabel>Water Quality Specifications</SectionLabel>
 
           {/* Page-level descriptive copy */}
@@ -398,7 +427,7 @@ export default function App() {
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
         {/* ── PURCHASE & TRANSFER TERMS ── */}
-        <div id="terms" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
+        <div id="terms" style={{ marginBottom: sp, scrollMarginTop: 50 }}>
           <SectionLabel>Purchase &amp; Transfer Terms</SectionLabel>
           <div className="justify-copy" style={{ fontSize: 15, color: '#0F172A', lineHeight: 1.6, maxWidth: 720 }}>
             {[
@@ -420,7 +449,7 @@ export default function App() {
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
         {/* ── CONTACT ── */}
-        <div id="contact" style={{ textAlign: 'center', marginBottom: sp, paddingTop: 8, scrollMarginTop: 100 }}>
+        <div id="contact" style={{ textAlign: 'center', marginBottom: sp, paddingTop: 8, scrollMarginTop: 50 }}>
           <div style={{ width: 24, height: 2, background: BRAND.teal, borderRadius: 1, margin: '0 auto 10px' }} />
           <div style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>Volume inquiries</div>
           <div style={{ fontSize: 18, fontWeight: 600, color: '#0F172A' }}>Christian Padilla</div>
@@ -436,7 +465,7 @@ export default function App() {
         <div style={{ borderBottom: '1px solid rgba(15,23,42,0.06)', marginBottom: sp }} />
 
         {/* ── COMMERCIAL TERMS ── */}
-        <div id="disclosures" style={{ marginBottom: sp, scrollMarginTop: 100 }}>
+        <div id="disclosures" style={{ marginBottom: sp, scrollMarginTop: 50 }}>
           <SectionLabel>Commercial Terms &amp; Disclosures</SectionLabel>
           <div className="justify-copy" style={{ fontSize: 11, color: '#64748B', lineHeight: 1.7, fontWeight: 400, maxWidth: 720 }}>
             <p style={{ margin: '0 0 8px' }}>All pricing and volumes are indicative and subject to change based on availability, water quality, system conditions, and market dynamics. Pricing and availability are not guaranteed until confirmed in a fully executed agreement.</p>
@@ -462,8 +491,18 @@ export default function App() {
         .pulse-dot{animation:pulse 2s ease-in-out infinite;}
         .contact-link:hover{color:${BRAND.teal}!important;text-decoration:underline;}
         .justify-copy{text-align:left;}
-        .anchor-nav::-webkit-scrollbar{display:none;}
-        @media(max-width:768px){body{font-size:14px;}}
+        .site-brand-name{font-size:15px;}
+        .anchor-nav-scroll{display:flex;align-items:center;justify-content:center;height:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;}
+        .anchor-nav-scroll::-webkit-scrollbar{display:none;}
+        @media(max-width:768px){
+          body{font-size:14px;}
+          .site-brand-name{font-size:14px;}
+          .anchor-nav-scroll{justify-content:flex-start;scroll-snap-type:x proximity;padding:0 24px;}
+          .anchor-nav-scroll>[data-anchor-tab]{scroll-snap-align:center;}
+          .anchor-nav-wrapper::after{content:'';position:absolute;top:0;right:0;bottom:1px;width:32px;pointer-events:none;background:linear-gradient(to right,rgba(248,250,252,0),rgba(248,250,252,1));}
+          .anchor-nav-wrapper.has-scrolled-left::before{content:'';position:absolute;top:0;left:0;bottom:1px;width:32px;pointer-events:none;background:linear-gradient(to left,rgba(248,250,252,0),rgba(248,250,252,1));z-index:1;}
+        }
+        @media(max-width:380px){.site-brand-name{font-size:12px;}}
       `}</style>
     </div>
   );
