@@ -165,12 +165,13 @@ export default function App() {
       <div style={{
         background: '#F8FAFC', borderBottom: '1px solid rgba(15,23,42,0.06)',
         minHeight: isMobile ? 52 : 40,
-        padding: isMobile ? '8px 20px' : '0 24px',
+        marginTop: isMobile ? 10 : 0,
+        padding: isMobile ? '14px 20px' : '0 24px',
         display: 'flex',
         flexDirection: isMobile ? 'column' : 'row',
         alignItems: isMobile ? 'flex-start' : 'center',
         justifyContent: isMobile ? 'flex-start' : 'space-between',
-        gap: isMobile ? 2 : 0,
+        gap: isMobile ? 6 : 0,
         fontSize: 11, fontWeight: 500, color: '#475569', letterSpacing: '0.1em', textTransform: 'uppercase',
         ...TABNUM,
       }}>
