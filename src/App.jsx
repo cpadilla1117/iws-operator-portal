@@ -152,7 +152,7 @@ export default function App() {
       <div style={{ height: 3, background: BRAND.gradient }} />
       <nav style={{
         background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid #E2E8F0', height: 52, padding: '0 24px',
+        borderBottom: '1px solid #E2E8F0', height: 52, padding: isMobile ? '0 20px' : '0 24px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -164,8 +164,13 @@ export default function App() {
       {/* ── STATUS BAR (scrolls away — not sticky) ── */}
       <div style={{
         background: '#F8FAFC', borderBottom: '1px solid rgba(15,23,42,0.06)',
-        height: 40, padding: '0 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        minHeight: isMobile ? 52 : 40,
+        padding: isMobile ? '8px 20px' : '0 24px',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        justifyContent: isMobile ? 'flex-start' : 'space-between',
+        gap: isMobile ? 2 : 0,
         fontSize: 11, fontWeight: 500, color: '#475569', letterSpacing: '0.1em', textTransform: 'uppercase',
         ...TABNUM,
       }}>
@@ -173,16 +178,13 @@ export default function App() {
           <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', flexShrink: 0 }} />
           <span>LIVE · MILLS RANCH + FED128 · EDDY COUNTY, NM</span>
         </div>
-        {!isMobile && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>CYCLE: {formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>CYCLE: {formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
+          <span className="refresh-info" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <span style={{ color: '#CBD5E1' }}> · </span>
             <span>NEXT REFRESH: {formatDateShort(PRICING_CYCLE.end)}</span>
-          </div>
-        )}
-        {isMobile && (
-          <span style={{ fontSize: 10 }}>{formatDateShort(PRICING_CYCLE.start)} – {formatDateShort(PRICING_CYCLE.end)}</span>
-        )}
+          </span>
+        </div>
       </div>
 
       {/* ── ANCHOR NAV (sticky, solo) ── */}
@@ -497,12 +499,15 @@ export default function App() {
         @media(max-width:768px){
           body{font-size:14px;}
           .site-brand-name{font-size:14px;}
-          .anchor-nav-scroll{justify-content:flex-start;scroll-snap-type:x proximity;padding:0 24px;}
+          .anchor-nav-scroll{justify-content:flex-start;scroll-snap-type:x proximity;padding:0 20px;}
           .anchor-nav-scroll>[data-anchor-tab]{scroll-snap-align:center;}
           .anchor-nav-wrapper::after{content:'';position:absolute;top:0;right:0;bottom:1px;width:32px;pointer-events:none;background:linear-gradient(to right,rgba(248,250,252,0),rgba(248,250,252,1));}
           .anchor-nav-wrapper.has-scrolled-left::before{content:'';position:absolute;top:0;left:0;bottom:1px;width:32px;pointer-events:none;background:linear-gradient(to left,rgba(248,250,252,0),rgba(248,250,252,1));z-index:1;}
         }
-        @media(max-width:380px){.site-brand-name{font-size:12px;}}
+        @media(max-width:380px){
+          .site-brand-name{font-size:12px;}
+          .refresh-info{display:none!important;}
+        }
       `}</style>
     </div>
   );
